@@ -1,0 +1,11 @@
+services:
+  postgres:
+    # Expose DB port so you can connect with a local client (e.g. psql, TablePlus)
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  api:
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    # No auto-restart in QA so crashed containers are easy to inspect
+    restart: "no"

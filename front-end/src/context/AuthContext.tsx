@@ -1,0 +1,165 @@
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+const API_URL = `${import.meta.env.VITE_API_BASE_URL as string}/auth`;
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface AuthContextValue {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  authLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  getAccessToken: () => string | null;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+async function refreshAccessToken(): Promise<{ access_token: string; user: User }> {
+  const res = await fetch(`${API_URL}/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Refresh failed");
+  return res.json();
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: sessionData, isLoading: authLoading } = useQuery({
+    queryKey: ["session"],
+    queryFn: refreshAccessToken,
+    retry: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    throwOnError: false,
+  });
+
+  // Keep access token in sync with query data
+  const resolvedToken = sessionData?.access_token ?? accessToken;
+  const user = sessionData?.user ?? null;
+  const isAuthenticated = !!resolvedToken;
+
+  const loginMutation = useMutation({
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }) => {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json() as Promise<{ access_token: string; user: User }>;
+    },
+    onSuccess: (data) => {
+      setAccessToken(data.access_token);
+      queryClient.setQueryData(["session"], data);
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async ({
+      name,
+      email,
+      password,
+    }: {
+      name: string;
+      email: string;
+      password: string;
+    }) => {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json() as Promise<{ access_token: string; user: User }>;
+    },
+    onSuccess: (data) => {
+      setAccessToken(data.access_token);
+      queryClient.setQueryData(["session"], data);
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_URL}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Logout failed");
+    },
+    onSettled: () => {
+      setAccessToken(null);
+      queryClient.setQueryData(["session"], null);
+      queryClient.clear();
+    },
+  });
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      await loginMutation.mutateAsync({ email, password });
+    },
+    [loginMutation]
+  );
+
+  const register = useCallback(
+    async (name: string, email: string, password: string) => {
+      await registerMutation.mutateAsync({ name, email, password });
+    },
+    [registerMutation]
+  );
+
+  const logout = useCallback(async () => {
+    await logoutMutation.mutateAsync();
+  }, [logoutMutation]);
+
+  const getAccessToken = useCallback(() => resolvedToken, [resolvedToken]);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        accessToken: resolvedToken,
+        isAuthenticated,
+        authLoading,
+        login,
+        register,
+        logout,
+        getAccessToken,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
+}

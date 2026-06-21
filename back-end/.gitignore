@@ -1,0 +1,49 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ── Build output ──────────────────────────────────────────────────────────────
+dist/
+
+# ── Environment variables (never commit real secrets) ─────────────────────────
+.env
+.env.local
+.env.qa
+.env.prod
+.env.staging
+.env.*.local
+# .env.example is intentionally NOT ignored — it's a safe template
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Local Docker volume data if ever mounted to a host directory
+.docker/
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+
+# ── Test & coverage ───────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Scratch files ─────────────────────────────────────────────────────────────
+ss

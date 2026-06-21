@@ -1,0 +1,68 @@
+{
+  "name": "back-end",
+  "imports": {
+    "@*": "./src/*"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "scripts": {
+    "dev": "tsx --watch --env-file .env src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "docker:qa:up": "docker compose -f docker-compose.yml -f docker-compose.qa.yml --env-file .env.qa up --build",
+    "docker:qa:down": "docker compose -f docker-compose.yml -f docker-compose.qa.yml --env-file .env.qa down",
+    "docker:qa:logs": "docker compose -f docker-compose.yml -f docker-compose.qa.yml --env-file .env.qa logs -f",
+    "docker:prod:up": "docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up --build -d",
+    "docker:prod:down": "docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod down",
+    "docker:prod:logs": "docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod logs -f"
+  },
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.3.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "openai": "^6.44.0",
+    "pg": "^8.21.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node22": "^22.0.5",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.9.1",
+    "@types/pg": "^8.20.0",
+    "eslint": "^10.4.0",
+    "eslint-plugin-perfectionist": "^5.9.0",
+    "prettier": "^3.8.3",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.1.0",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.4",
+    "vitest": "^3.0.0"
+  }
+}
