@@ -3,9 +3,11 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   type ReactNode,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { setRefreshCallback, type SessionData } from "@/lib/api";
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL as string}/auth`;
 
@@ -51,7 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     throwOnError: false,
+    refetchInterval: 13 * 60 * 1000,
   });
+
+  useEffect(() => {
+    setRefreshCallback((session: SessionData) => {
+      queryClient.setQueryData(["session"], session);
+    });
+  }, [queryClient]);
 
   // Keep access token in sync with query data
   const resolvedToken = sessionData?.access_token ?? accessToken;

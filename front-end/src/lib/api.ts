@@ -1,19 +1,55 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
+export interface SessionData {
+  access_token: string;
+  user: { id: string; email: string; name: string };
+}
+
+type RefreshCallback = (session: SessionData) => void;
+let onRefreshed: RefreshCallback | null = null;
+export function setRefreshCallback(fn: RefreshCallback) { onRefreshed = fn; }
+
+let inflightRefresh: Promise<SessionData> | null = null;
+
+async function refreshSession(): Promise<SessionData> {
+  if (!inflightRefresh) {
+    inflightRefresh = fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error("Session expired");
+        return r.json() as Promise<SessionData>;
+      })
+      .finally(() => { inflightRefresh = null; });
+  }
+  return inflightRefresh;
+}
+
 async function apiFetch<T>(
   path: string,
   token: string,
   options?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options?.headers ?? {}),
-    },
-    credentials: "include",
-  });
+  const makeRequest = (t: string) =>
+    fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${t}`,
+        ...(options?.headers ?? {}),
+      },
+      credentials: "include",
+    });
+
+  let res = await makeRequest(token);
+
+  if (res.status === 401) {
+    const session = await refreshSession();
+    onRefreshed?.(session);
+    res = await makeRequest(session.access_token);
+  }
+
   if (!res.ok) throw new Error(`API error ${res.status}`);
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
