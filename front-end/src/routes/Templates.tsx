@@ -203,7 +203,7 @@ export default function Templates() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 border-b border-border px-6 h-14 shrink-0">
+      <header className="flex items-center gap-3 border-b border-border px-4 md:px-6 h-14 shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -220,7 +220,7 @@ export default function Templates() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto px-6 py-6">
+      <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />

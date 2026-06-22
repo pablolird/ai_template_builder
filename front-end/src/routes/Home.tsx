@@ -263,6 +263,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const nameBeforeEdit = useRef(templateName);
@@ -457,6 +458,7 @@ export default function Home() {
         setTemplateHtml(response.templateHtml);
         // New template from AI invalidates any previously saved template for this session
         setCurrentTemplateId(null);
+        setMobileTab("preview");
       }
     } catch {
       setMessages((prev) => [
@@ -508,16 +510,43 @@ export default function Home() {
               onClick={handleNewChat}
             >
               <PenLine className="size-3.5" />
-              New chat
+              <span className="hidden sm:inline">New chat</span>
             </Button>
             <ModeToggle />
           </header>
+
+          {/* Mobile tab switcher */}
+          <div className="md:hidden flex shrink-0 border-b border-border">
+            <button
+              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                mobileTab === "chat"
+                  ? "border-b-2 border-primary text-foreground"
+                  : "text-muted-foreground"
+              }`}
+              onClick={() => setMobileTab("chat")}
+            >
+              Chat
+            </button>
+            <button
+              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                mobileTab === "preview"
+                  ? "border-b-2 border-primary text-foreground"
+                  : "text-muted-foreground"
+              }`}
+              onClick={() => setMobileTab("preview")}
+            >
+              Preview
+              {templateHtml && (
+                <span className="ml-1.5 inline-block size-1.5 rounded-full bg-primary align-middle" />
+              )}
+            </button>
+          </div>
 
           {/* Main area: chat + preview */}
           <div className="flex flex-1 min-h-0">
 
             {/* Chat panel */}
-            <div className="flex flex-col w-[380px] shrink-0 min-h-0 border-r border-border">
+            <div className={`flex-col flex-1 md:flex-none w-full md:w-[380px] md:shrink-0 min-h-0 md:border-r border-border ${mobileTab === "chat" ? "flex" : "hidden md:flex"}`}>
               {loadingConversation ? (
                 <div className="flex-1 flex items-center justify-center">
                   <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -552,7 +581,7 @@ export default function Home() {
                   />
                   <div className="flex items-center gap-2 px-3 py-2 border-t border-border">
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
-                      <SelectTrigger className="h-7 text-xs w-40 border-0 shadow-none bg-transparent hover:bg-muted">
+                      <SelectTrigger className="h-7 text-xs flex-1 md:flex-none md:w-40 border-0 shadow-none bg-transparent hover:bg-muted">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -570,7 +599,7 @@ export default function Home() {
                       disabled={!!currentConversationId}
                     >
                       <SelectTrigger
-                        className={`h-7 text-xs w-36 border-0 shadow-none bg-transparent hover:bg-muted ${
+                        className={`h-7 text-xs flex-1 md:flex-none md:w-36 border-0 shadow-none bg-transparent hover:bg-muted ${
                           noPreset ? "text-destructive font-medium" : ""
                         }`}
                       >
@@ -589,7 +618,7 @@ export default function Home() {
                       </SelectContent>
                     </Select>
 
-                    <div className="flex-1" />
+                    <div className="hidden md:block md:flex-1" />
 
                     <Button
                       size="icon-sm"
@@ -620,7 +649,7 @@ export default function Home() {
             </div>
 
             {/* Preview panel */}
-            <div className="flex flex-col flex-1 min-h-0 min-w-0">
+            <div className={`flex-col flex-1 min-h-0 min-w-0 ${mobileTab === "preview" ? "flex" : "hidden md:flex"}`}>
               <div className="shrink-0 flex items-center gap-2 border-b border-border px-4 h-11">
                 <span className="text-xs font-medium text-muted-foreground">Template Preview</span>
                 {templateHtml && (
