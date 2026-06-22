@@ -91,7 +91,7 @@ export default function Settings() {
         <NavSidebar />
 
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
-          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0">
+          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0 bg-background/80 backdrop-blur-sm">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold">{t("settings_title")}</h1>

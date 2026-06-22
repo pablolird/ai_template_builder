@@ -3,9 +3,11 @@ import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Lang } from "@/lib/translations";
+import { FieldError } from "@/components/login/FieldError";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,10 +42,6 @@ const registerSchema = z
 type LoginData = z.infer<typeof loginSchema>;
 type RegisterData = z.infer<typeof registerSchema>;
 
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-destructive text-xs mt-1">{message}</p>;
-}
 
 const LANGS: { value: Lang; label: string }[] = [
   { value: "en", label: "EN" },
@@ -97,13 +95,13 @@ export default function Login() {
   if (authLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-foreground" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background px-4">
+    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5 px-4">
       <div className="flex justify-end items-center gap-1 p-3">
         <div className="flex gap-0.5">
           {LANGS.map((l) => (
@@ -125,7 +123,10 @@ export default function Login() {
 
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground mb-4 shadow-lg shadow-primary/20">
+            <Sparkles className="size-6" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             {t("login_title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t("login_subtitle")}</p>

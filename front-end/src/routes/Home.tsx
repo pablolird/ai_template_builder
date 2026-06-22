@@ -1,18 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
-  LayoutTemplate,
   Loader2,
-  LogOut,
   PenLine,
   Save,
   Send,
-  Settings,
-  SquarePen,
-  Trash2,
-  User,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -25,11 +19,12 @@ import {
   fetchPresets,
   sendChat,
   updateTemplate,
-  type Conversation,
 } from "@/lib/api";
+import { AppSidebar } from "@/components/home/AppSidebar";
+import { ChatMessage, type Message } from "@/components/home/ChatMessage";
+import { TemplateGenerating } from "@/components/home/TemplateGenerating";
 import PresetSheet from "@/components/PresetSheet";
 import ModeToggle from "@/components/ModeToggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -40,15 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -59,208 +45,7 @@ const DEEPSEEK_MODELS = [
   { id: "deepseek-reasoner", label: "DeepSeek R1 (Reasoner)" },
 ];
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
-
 const WELCOME_ID = "welcome";
-
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-
-interface AppSidebarProps {
-  conversations: Conversation[];
-  activeConversationId: string | null;
-  onNewChat: () => void;
-  onConversationClick: (id: string) => void;
-  onConversationDelete: (id: string) => void;
-  onPresetsClick: () => void;
-}
-
-function AppSidebar({
-  conversations,
-  activeConversationId,
-  onNewChat,
-  onConversationClick,
-  onConversationDelete,
-  onPresetsClick,
-}: AppSidebarProps) {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { t } = useLanguage();
-
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "U";
-
-  return (
-    <Sidebar>
-      <SidebarHeader className="px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="text-sm font-medium">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium truncate">
-              {user?.name ?? "User"}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {user?.email ?? "user@example.com"}
-            </span>
-          </div>
-        </div>
-      </SidebarHeader>
-
-      <Separator />
-
-      <SidebarContent>
-        {/* Conversations */}
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("sidebar_chats")}</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={onNewChat}>
-                  <SquarePen />
-                  <span>{t("sidebar_new_chat")}</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-
-          {conversations.length > 0 && (
-            <div className="mt-1 flex flex-col gap-0.5">
-              {conversations.map((c) => (
-                <div
-                  key={c.id}
-                  className={`flex items-center gap-1 group rounded-md px-2 py-1.5 hover:bg-sidebar-accent cursor-pointer ${
-                    c.id === activeConversationId ? "bg-sidebar-accent" : ""
-                  }`}
-                >
-                  <button
-                    className="flex-1 text-left text-xs text-sidebar-foreground truncate"
-                    onClick={() => onConversationClick(c.id)}
-                  >
-                    {c.title}
-                  </button>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onConversationDelete(c.id);
-                    }}
-                    aria-label="Delete conversation"
-                  >
-                    <Trash2 className="size-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </SidebarGroup>
-
-        {/* Templates & presets */}
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            {t("sidebar_templates_section")}
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button
-                  className="w-full"
-                  onClick={() => navigate("/templates")}
-                >
-                  <FileText />
-                  <span>{t("sidebar_my_templates")}</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={onPresetsClick}>
-                  <LayoutTemplate />
-                  <span>{t("sidebar_presets")}</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {/* Account */}
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("sidebar_account")}</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={() => navigate("/profile")}>
-                  <User />
-                  <span>{t("sidebar_profile")}</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button
-                  className="w-full"
-                  onClick={() => navigate("/settings")}
-                >
-                  <Settings />
-                  <span>{t("sidebar_settings")}</span>
-                </button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="px-2 pb-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => void logout()}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <LogOut />
-              <span>{t("sidebar_sign_out")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
-  );
-}
-
-// ── Chat message ──────────────────────────────────────────────────────────────
-
-function ChatMessage({ message }: { message: Message }) {
-  const isUser = message.role === "user";
-  return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3`}>
-      <div
-        className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
-          isUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
-        }`}
-      >
-        {message.content}
-      </div>
-    </div>
-  );
-}
-
-// ── Home ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
   const { getAccessToken } = useAuth();
@@ -558,7 +343,7 @@ export default function Home() {
 
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
           {/* Top bar */}
-          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0">
+          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0 bg-background/80 backdrop-blur-sm">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold text-foreground truncate flex-1">
@@ -639,7 +424,7 @@ export default function Home() {
               {/* Input area */}
               <div className="shrink-0 p-3 border-t border-border">
                 <div
-                  className={`rounded-xl border bg-background shadow-sm ${noPreset ? "opacity-60" : ""}`}
+                  className={`rounded-xl border bg-background shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md focus-within:shadow-primary/5 ${noPreset ? "opacity-60" : ""}`}
                 >
                   <Textarea
                     value={input}
@@ -794,17 +579,20 @@ export default function Home() {
                 )}
               </div>
 
-              {templateHtml ? (
+              {isLoading ? (
+                <TemplateGenerating />
+              ) : templateHtml ? (
                 <iframe
-                  className="flex-1 w-full border-0 bg-white"
+                  key={templateHtml}
+                  className="flex-1 w-full border-0 bg-white template-fade-in"
                   srcDoc={templateHtml}
                   title="Invoice Preview"
                   sandbox="allow-same-origin"
                 />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
-                  <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                    <FileText className="size-5 text-muted-foreground" />
+                  <div className="size-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10 flex items-center justify-center">
+                    <FileText className="size-6 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-medium">

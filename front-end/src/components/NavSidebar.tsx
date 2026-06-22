@@ -50,7 +50,7 @@ export default function NavSidebar() {
         <SidebarHeader className="px-4 py-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-9 w-9">
-              <AvatarFallback className="text-sm font-medium">{initials}</AvatarFallback>
+              <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium truncate">{user?.name ?? "User"}</span>
