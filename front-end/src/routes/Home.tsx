@@ -292,6 +292,9 @@ export default function Home() {
   const [presetSheetOpen, setPresetSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
+
+  // Incremented on every new-chat reset or new load; lets async fetches detect they've been superseded.
+  const loadOpRef = useRef(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
@@ -358,6 +361,7 @@ export default function Home() {
   // ── New chat ─────────────────────────────────────────────────────────────────
 
   function handleNewChat() {
+    loadOpRef.current += 1;
     setMessages([{ id: WELCOME_ID, role: "assistant", content: "" }]);
     setInput("");
     setCurrentConversationId(null);
@@ -370,9 +374,12 @@ export default function Home() {
 
   async function handleLoadConversation(id: string) {
     if (id === currentConversationId) return;
+    loadOpRef.current += 1;
+    const opId = loadOpRef.current;
     setLoadingConversation(true);
     try {
       const conv = await fetchConversation(token!, id);
+      if (loadOpRef.current !== opId) return;
       setCurrentConversationId(conv.id);
       setMessages(
         conv.messages.length > 0
@@ -388,7 +395,7 @@ export default function Home() {
       setCurrentTemplateId(null);
       setTemplateName("Invoice Template");
     } finally {
-      setLoadingConversation(false);
+      if (loadOpRef.current === opId) setLoadingConversation(false);
     }
   }
 
