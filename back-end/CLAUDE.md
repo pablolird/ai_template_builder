@@ -55,5 +55,6 @@ Follow the same router/controller/service split when adding new feature modules.
 | `JWT_REFRESH_SECRET` | Signs refresh tokens |
 | `CORS_ORIGIN` | Allowed frontend origin (default: `http://localhost:3001`) |
 | `PORT` | Server port (default: `3000`) |
+| `DEEPSEEK_API_KEY` | DeepSeek API key for AI features |
 
 Copy `.env.example` → `.env` for local dev. Docker environments use `.env.qa` / `.env.prod`.

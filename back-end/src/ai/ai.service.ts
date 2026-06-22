@@ -51,6 +51,15 @@ Rules:
 ${presetBlock}`;
 }
 
+// deepseek-reasoner (R1) does not support response_format — only use it for chat models
+const SUPPORTS_JSON_FORMAT = new Set(['deepseek-chat']);
+
+// R1 sometimes wraps its JSON in markdown code fences despite instructions
+function extractJson(raw: string): string {
+  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  return fenceMatch ? fenceMatch[1]!.trim() : raw.trim();
+}
+
 export async function chat(
   messages: ChatMessage[],
   model: string,
@@ -65,10 +74,10 @@ export async function chat(
       { role: 'system', content: systemPrompt },
       ...messages.map((m) => ({ role: m.role, content: m.content })),
     ],
-    response_format: { type: 'json_object' },
+    ...(SUPPORTS_JSON_FORMAT.has(model) ? { response_format: { type: 'json_object' } } : {}),
   });
 
-  const raw = completion.choices[0]?.message.content ?? '{}';
+  const raw = extractJson(completion.choices[0]?.message.content ?? '{}');
 
   let parsed: unknown;
   try {

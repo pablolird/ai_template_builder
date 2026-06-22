@@ -53,7 +53,14 @@ export async function chat(req: Request, res: Response): Promise<void> {
   const preset = resolvedPresetId ? await getPreset(resolvedPresetId, userId) : null;
 
   // Call the AI
-  const aiResponse = await aiService.chat(history, model, preset);
+  let aiResponse: Awaited<ReturnType<typeof aiService.chat>>;
+  try {
+    aiResponse = await aiService.chat(history, model, preset);
+  } catch (err) {
+    console.error('[AI] DeepSeek call failed for model "%s":', model, err);
+    res.status(502).json({ error: 'AI service error' });
+    return;
+  }
 
   // Persist the AI response
   if (aiResponse.message) {
