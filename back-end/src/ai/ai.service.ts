@@ -16,7 +16,7 @@ function getClient(): OpenAI {
   });
 }
 
-function buildSystemPrompt(preset: Preset | null): string {
+function buildSystemPrompt(preset: Preset | null, currentTemplate?: string): string {
   const presetBlock = preset
     ? `
 The user has selected the following company preset — inject these values into the invoice template:
@@ -29,6 +29,22 @@ The user has selected the following company preset — inject these values into 
 - Email: ${preset.email ?? 'Not specified'}
 `
     : 'No company preset selected; use placeholder values for company fields.';
+
+  const editModeBlock = currentTemplate
+    ? `
+CURRENT TEMPLATE — APPLY A MINIMAL PATCH ONLY:
+The user already has a template. Your job is to apply their request as the smallest possible change to the HTML below.
+
+CRITICAL RULES — violating any of these is an error:
+- Return the original HTML with ONLY the single requested change applied.
+- Do NOT reformat code, reorder properties, rename classes, restructure elements, or clean up whitespace.
+- Do NOT add new sections, styles, or features that were not explicitly requested.
+- Do NOT "improve" anything you were not asked to change. If it was not mentioned, leave it exactly as-is.
+- Think of this as running a precise find-and-replace, not a rewrite.
+
+${currentTemplate}
+`
+    : '';
 
   return `You are an expert invoice template designer specializing in Paraguayan invoices (facturas).
 When the user asks you to create or modify an invoice template, respond with a JSON object:
@@ -48,7 +64,7 @@ Rules:
 - Design for A4 paper (210mm × 297mm) by default unless the user specifies otherwise.
 - Include realistic placeholder rows for line items (product/service, qty, unit price, total).
 - The template should look like an actual Paraguayan invoice with the proper structure.
-${presetBlock}`;
+${presetBlock}${editModeBlock}`;
 }
 
 // deepseek-reasoner (R1) does not support response_format — only use it for chat models
@@ -64,9 +80,10 @@ export async function chat(
   messages: ChatMessage[],
   model: string,
   preset: Preset | null,
+  currentTemplate?: string,
 ): Promise<ChatResponse> {
   const client = getClient();
-  const systemPrompt = buildSystemPrompt(preset);
+  const systemPrompt = buildSystemPrompt(preset, currentTemplate);
 
   const completion = await client.chat.completions.create({
     model,
