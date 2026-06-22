@@ -149,6 +149,7 @@ export default function Home() {
     loadOpRef.current += 1;
     setMessages([{ id: WELCOME_ID, role: "assistant", content: "" }]);
     setInput("");
+    setIsLoading(false);
     setCurrentConversationId(null);
     setTemplateHtml(null);
     setTemplateName("Invoice Template");
@@ -264,6 +265,10 @@ export default function Home() {
     const trimmed = input.trim();
     if (!trimmed || isLoading || noPreset) return;
 
+    // Snapshot the current op counter so we can detect if the user switched
+    // away (new chat / different conversation) before the response arrives.
+    const sendOpId = loadOpRef.current;
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -284,6 +289,9 @@ export default function Home() {
         currentConversationId ?? undefined,
         currentConversationId ? undefined : selectedPreset,
       );
+
+      // If the user switched chats while we were waiting, discard this response.
+      if (loadOpRef.current !== sendOpId) return;
 
       if (!currentConversationId) {
         setCurrentConversationId(response.conversationId);
@@ -307,6 +315,7 @@ export default function Home() {
         setMobileTab("preview");
       }
     } catch {
+      if (loadOpRef.current !== sendOpId) return;
       setMessages((prev) => [
         ...prev,
         {
@@ -316,7 +325,10 @@ export default function Home() {
         },
       ]);
     } finally {
-      setIsLoading(false);
+      // Only clear the spinner if this send is still the active one.
+      // If the user already switched away, handleNewChat/handleLoadConversation
+      // already reset isLoading to false.
+      if (loadOpRef.current === sendOpId) setIsLoading(false);
     }
   }
 

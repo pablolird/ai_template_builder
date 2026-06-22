@@ -19,7 +19,7 @@ export default function Templates() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const token = getAccessToken();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ["templates"],
@@ -29,14 +29,17 @@ export default function Templates() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      setDeletingId(id);
+      setDeletingIds((prev) => new Set(prev).add(id));
       await deleteTemplate(token!, id);
+      return id;
     },
-    onSuccess: () => {
-      setDeletingId(null);
+    onSuccess: (id) => {
+      setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
       void queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
-    onError: () => setDeletingId(null),
+    onError: (_err, id) => {
+      setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    },
   });
 
   function handleOpenInEditor(template: Template) {
@@ -90,7 +93,7 @@ export default function Templates() {
                       template={template}
                       onOpenInEditor={handleOpenInEditor}
                       onDelete={(id) => deleteMutation.mutate(id)}
-                      isDeleting={deletingId === template.id}
+                      isDeleting={deletingIds.has(template.id)}
                     />
                   </div>
                 ))}
