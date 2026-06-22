@@ -98,7 +98,7 @@ export default function Profile() {
         <NavSidebar />
 
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
-          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0">
+          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0 bg-background/80 backdrop-blur-sm">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold">{t("profile_title")}</h1>
@@ -264,7 +264,7 @@ export default function Profile() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      className="border-destructive/50 text-destructive hover:bg-destructive hover:text-white dark:hover:text-white"
                       onClick={() => setShowDeleteConfirm(true)}
                     >
                       {t("delete_account_title")}

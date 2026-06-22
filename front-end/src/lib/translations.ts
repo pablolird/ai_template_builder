@@ -100,7 +100,7 @@ const en = {
   btn_update_password: 'Update password',
   password_updated: 'Password updated successfully.',
   err_wrong_password: 'Current password is incorrect.',
-  section_danger: 'Danger Zone',
+  section_danger: 'Account Deletion',
   delete_account_title: 'Delete Account',
   delete_warning:
     'This action cannot be undone. All your templates, presets, and conversations will be permanently deleted.',
