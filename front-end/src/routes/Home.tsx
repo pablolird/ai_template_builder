@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Download,
   FileText,
   Loader2,
   PenLine,
@@ -226,6 +227,17 @@ export default function Home() {
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["templates"] }),
   });
+
+  function downloadTemplate() {
+    if (!templateHtml) return;
+    const blob = new Blob([templateHtml], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${templateName}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function startNameEdit() {
     nameBeforeEdit.current = templateName;
@@ -573,20 +585,31 @@ export default function Home() {
                       </button>
                     )}
 
-                    {!currentTemplateId && (
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      {!currentTemplateId && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1.5"
+                          onClick={() => saveTemplateMutation.mutate()}
+                          disabled={saveTemplateMutation.isPending}
+                        >
+                          <Save className="size-3" />
+                          {saveTemplateMutation.isPending
+                            ? t("btn_saving")
+                            : t("btn_save")}
+                        </Button>
+                      )}
                       <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1.5 ml-auto"
-                        onClick={() => saveTemplateMutation.mutate()}
-                        disabled={saveTemplateMutation.isPending}
+                        size="icon-sm"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={downloadTemplate}
+                        aria-label={t("btn_download")}
                       >
-                        <Save className="size-3" />
-                        {saveTemplateMutation.isPending
-                          ? t("btn_saving")
-                          : t("btn_save")}
+                        <Download className="size-3.5" />
                       </Button>
-                    )}
+                    </div>
                   </>
                 )}
               </div>

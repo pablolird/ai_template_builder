@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ExternalLink, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { Check, Download, ExternalLink, Loader2, Pencil, Trash2, X } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -42,6 +42,16 @@ export function TemplateCard({
     mutationFn: (name: string) => updateTemplate(token!, template.id, { name }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["templates"] }),
   });
+
+  function downloadTemplate() {
+    const blob = new Blob([template.html_content], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${template.name}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function commitRename() {
     const trimmed = title.trim();
@@ -125,6 +135,15 @@ export function TemplateCard({
           >
             <ExternalLink className="size-3" />
             {t("btn_open_editor")}
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={downloadTemplate}
+            aria-label={t("btn_download")}
+          >
+            <Download className="size-3.5" />
           </Button>
           <Button
             size="icon-sm"
