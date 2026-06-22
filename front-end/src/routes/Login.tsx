@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import type { Lang } from "@/lib/translations";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -43,8 +45,15 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-destructive text-xs mt-1">{message}</p>;
 }
 
+const LANGS: { value: Lang; label: string }[] = [
+  { value: "en", label: "EN" },
+  { value: "es", label: "ES" },
+  { value: "pt", label: "PT" },
+];
+
 export default function Login() {
   const { login, register, isAuthenticated, authLoading } = useAuth();
+  const { t, lang, setLang } = useLanguage();
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -70,7 +79,7 @@ export default function Login() {
       navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setLoginError(msg === "401" ? "Invalid credentials." : "Something went wrong.");
+      setLoginError(msg === "401" ? t("err_invalid_credentials") : t("err_generic"));
     }
   }
 
@@ -81,9 +90,7 @@ export default function Login() {
       navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setRegisterError(
-        msg === "409" ? "An account with this email already exists." : "Something went wrong."
-      );
+      setRegisterError(msg === "409" ? t("err_email_exists") : t("err_generic"));
     }
   }
 
@@ -97,139 +104,155 @@ export default function Login() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background px-4">
-      <div className="flex justify-end p-3">
+      <div className="flex justify-end items-center gap-1 p-3">
+        <div className="flex gap-0.5">
+          {LANGS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => setLang(l.value)}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                lang === l.value
+                  ? "bg-muted text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
         <ModeToggle />
       </div>
+
       <div className="flex-1 flex flex-col items-center justify-center">
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          AI Invoice Template Generator
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Sign in to your account to continue
-        </p>
-      </div>
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            {t("login_title")}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("login_subtitle")}</p>
+        </div>
 
-      <Tabs defaultValue="login" className="w-full max-w-sm">
-        <TabsList className="grid grid-cols-2 w-full mb-4">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="register">Register</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="login" className="w-full max-w-sm">
+          <TabsList className="grid grid-cols-2 w-full mb-4">
+            <TabsTrigger value="login">{t("tab_login")}</TabsTrigger>
+            <TabsTrigger value="register">{t("tab_register")}</TabsTrigger>
+          </TabsList>
 
-        {/* Login Tab */}
-        <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome back</CardTitle>
-              <CardDescription>Enter your credentials to sign in.</CardDescription>
-            </CardHeader>
-            <form onSubmit={loginForm.handleSubmit(handleLogin)}>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    {...loginForm.register("email")}
-                  />
-                  <FieldError message={loginForm.formState.errors.email?.message} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...loginForm.register("password")}
-                  />
-                  <FieldError message={loginForm.formState.errors.password?.message} />
-                </div>
-              </CardContent>
-              <CardFooter className="flex-col gap-2 mt-2">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loginForm.formState.isSubmitting}
-                >
-                  {loginForm.formState.isSubmitting ? "Signing in…" : "Sign in"}
-                </Button>
-                {loginError && (
-                  <p className="text-destructive text-sm text-center">{loginError}</p>
-                )}
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
+          {/* Login Tab */}
+          <TabsContent value="login">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("welcome_back")}</CardTitle>
+                <CardDescription>{t("enter_credentials")}</CardDescription>
+              </CardHeader>
+              <form onSubmit={loginForm.handleSubmit(handleLogin)}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="login-email">{t("field_email")}</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      {...loginForm.register("email")}
+                    />
+                    <FieldError message={loginForm.formState.errors.email?.message} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="login-password">{t("field_password")}</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      {...loginForm.register("password")}
+                    />
+                    <FieldError message={loginForm.formState.errors.password?.message} />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex-col gap-2 mt-2">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loginForm.formState.isSubmitting}
+                  >
+                    {loginForm.formState.isSubmitting ? t("btn_signing_in") : t("btn_sign_in")}
+                  </Button>
+                  {loginError && (
+                    <p className="text-destructive text-sm text-center">{loginError}</p>
+                  )}
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
 
-        {/* Register Tab */}
-        <TabsContent value="register">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create an account</CardTitle>
-              <CardDescription>Fill in your details to get started.</CardDescription>
-            </CardHeader>
-            <form onSubmit={registerForm.handleSubmit(handleRegister)}>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-name">Name</Label>
-                  <Input
-                    id="reg-name"
-                    type="text"
-                    placeholder="John Doe"
-                    {...registerForm.register("name")}
-                  />
-                  <FieldError message={registerForm.formState.errors.name?.message} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-email">Email</Label>
-                  <Input
-                    id="reg-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    {...registerForm.register("email")}
-                  />
-                  <FieldError message={registerForm.formState.errors.email?.message} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-password">Password</Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...registerForm.register("password")}
-                  />
-                  <FieldError message={registerForm.formState.errors.password?.message} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-confirm">Confirm Password</Label>
-                  <Input
-                    id="reg-confirm"
-                    type="password"
-                    placeholder="••••••••"
-                    {...registerForm.register("confirmPassword")}
-                  />
-                  <FieldError
-                    message={registerForm.formState.errors.confirmPassword?.message}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex-col gap-2 mt-2">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={registerForm.formState.isSubmitting}
-                >
-                  {registerForm.formState.isSubmitting ? "Creating account…" : "Create account"}
-                </Button>
-                {registerError && (
-                  <p className="text-destructive text-sm text-center">{registerError}</p>
-                )}
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* Register Tab */}
+          <TabsContent value="register">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("create_account_title")}</CardTitle>
+                <CardDescription>{t("fill_details")}</CardDescription>
+              </CardHeader>
+              <form onSubmit={registerForm.handleSubmit(handleRegister)}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reg-name">{t("field_name")}</Label>
+                    <Input
+                      id="reg-name"
+                      type="text"
+                      placeholder="John Doe"
+                      {...registerForm.register("name")}
+                    />
+                    <FieldError message={registerForm.formState.errors.name?.message} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reg-email">{t("field_email")}</Label>
+                    <Input
+                      id="reg-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      {...registerForm.register("email")}
+                    />
+                    <FieldError message={registerForm.formState.errors.email?.message} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reg-password">{t("field_password")}</Label>
+                    <Input
+                      id="reg-password"
+                      type="password"
+                      placeholder="••••••••"
+                      {...registerForm.register("password")}
+                    />
+                    <FieldError message={registerForm.formState.errors.password?.message} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reg-confirm">{t("field_confirm_password")}</Label>
+                    <Input
+                      id="reg-confirm"
+                      type="password"
+                      placeholder="••••••••"
+                      {...registerForm.register("confirmPassword")}
+                    />
+                    <FieldError
+                      message={registerForm.formState.errors.confirmPassword?.message}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex-col gap-2 mt-2">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={registerForm.formState.isSubmitting}
+                  >
+                    {registerForm.formState.isSubmitting
+                      ? t("btn_creating_account")
+                      : t("btn_create_account")}
+                  </Button>
+                  {registerError && (
+                    <p className="text-destructive text-sm text-center">{registerError}</p>
+                  )}
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

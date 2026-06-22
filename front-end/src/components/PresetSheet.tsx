@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   createPreset,
   deletePreset,
@@ -52,6 +53,7 @@ interface PresetFormProps {
 }
 
 function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
+  const { t } = useLanguage();
   const {
     register,
     handleSubmit,
@@ -73,13 +75,13 @@ function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
   return (
     <form onSubmit={handleSubmit(onSave)} className="flex flex-col gap-4 px-4 py-2">
       <div className="grid gap-1.5">
-        <Label htmlFor="name">Preset label *</Label>
+        <Label htmlFor="name">{t("field_preset_label")}</Label>
         <Input id="name" placeholder="e.g. My Company" {...register("name")} />
         <FieldError message={errors.name?.message} />
       </div>
 
       <Separator />
-      <p className="text-xs text-muted-foreground -mt-2">Company information</p>
+      <p className="text-xs text-muted-foreground -mt-2">{t("section_company_info")}</p>
 
       <div className="grid gap-1.5">
         <Label htmlFor="business_name">Razón Social</Label>
@@ -116,10 +118,14 @@ function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
 
       <div className="flex gap-2 pt-2">
         <Button type="submit" size="sm" disabled={isSaving} className="flex-1">
-          {isSaving ? "Saving…" : preset ? "Update preset" : "Create preset"}
+          {isSaving
+            ? t("btn_saving")
+            : preset
+              ? t("btn_update_preset")
+              : t("btn_create_preset")}
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={onCancel}>
-          Cancel
+          {t("btn_cancel")}
         </Button>
       </div>
     </form>
@@ -133,6 +139,7 @@ interface PresetSheetProps {
 
 export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
   const { getAccessToken } = useAuth();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Preset | "new" | null>(null);
 
@@ -188,14 +195,18 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-1 w-fit"
             >
               <ChevronLeft className="size-3.5" />
-              Back to presets
+              {t("back_to_presets")}
             </button>
           ) : null}
-          <SheetTitle>{editing ? (editing === "new" ? "New preset" : "Edit preset") : "Presets"}</SheetTitle>
-          <SheetDescription>
+          <SheetTitle>
             {editing
-              ? "Fill in your company details for Paraguay invoices."
-              : "Select a preset to auto-fill invoice fields when chatting with the AI."}
+              ? editing === "new"
+                ? t("new_preset")
+                : t("edit_preset")
+              : t("sidebar_presets")}
+          </SheetTitle>
+          <SheetDescription>
+            {editing ? t("preset_desc_fill") : t("preset_desc_select")}
           </SheetDescription>
         </SheetHeader>
 
@@ -217,12 +228,12 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
               onClick={() => setEditing("new")}
             >
               <Plus className="size-3.5" />
-              New preset
+              {t("new_preset")}
             </Button>
 
             {presets.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No presets yet. Create one to auto-fill invoice fields.
+                {t("no_presets_msg")}
               </p>
             )}
 

@@ -24,6 +24,7 @@ interface AuthContextValue {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   getAccessToken: () => string | null;
+  updateUserName: (name: string) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -140,6 +141,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const getAccessToken = useCallback(() => resolvedToken, [resolvedToken]);
 
+  const updateUserName = useCallback(
+    (name: string) => {
+      queryClient.setQueryData<{ access_token: string; user: User } | null>(
+        ['session'],
+        (old) => {
+          if (!old) return old;
+          return { ...old, user: { ...old.user, name } };
+        },
+      );
+    },
+    [queryClient],
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -151,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         getAccessToken,
+        updateUserName,
       }}
     >
       {children}

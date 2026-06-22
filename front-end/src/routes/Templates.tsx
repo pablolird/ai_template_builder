@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   ExternalLink,
   FileText,
   Loader2,
@@ -13,11 +12,14 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { deleteTemplate, fetchTemplates, updateTemplate, type Template } from "@/lib/api";
+import NavSidebar from "@/components/NavSidebar";
 import ModeToggle from "@/components/ModeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 // Scaled iframe thumbnail — shows the top portion of the template at reduced size
 const IFRAME_NATURAL_WIDTH = 794; // ~A4 at 96 dpi
@@ -66,6 +68,7 @@ interface TemplateCardProps {
 
 function TemplateCard({ template, onOpenInEditor, onDelete, isDeleting }: TemplateCardProps) {
   const { getAccessToken } = useAuth();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const token = getAccessToken();
 
@@ -144,7 +147,7 @@ function TemplateCard({ template, onOpenInEditor, onDelete, isDeleting }: Templa
             onClick={() => onOpenInEditor(template)}
           >
             <ExternalLink className="size-3" />
-            Open in editor
+            {t("btn_open_editor")}
           </Button>
           <Button
             size="icon-sm"
@@ -167,6 +170,7 @@ function TemplateCard({ template, onOpenInEditor, onDelete, isDeleting }: Templa
 export default function Templates() {
   const navigate = useNavigate();
   const { getAccessToken } = useAuth();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const token = getAccessToken();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -201,26 +205,20 @@ export default function Templates() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <header className="flex items-center gap-3 border-b border-border px-4 md:px-6 h-14 shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1.5 text-xs text-muted-foreground"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to chat
-        </Button>
-        <Separator orientation="vertical" className="h-5" />
-        <h1 className="text-sm font-semibold">My Templates</h1>
-        <div className="flex-1" />
-        <ModeToggle />
-      </header>
+    <SidebarProvider>
+      <div className="flex h-screen w-full bg-background overflow-hidden">
+        <NavSidebar />
 
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
+          <header className="flex items-center gap-3 border-b border-border px-4 h-14 shrink-0">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="h-5" />
+            <h1 className="text-sm font-semibold">{t("templates_title")}</h1>
+            <div className="flex-1" />
+            <ModeToggle />
+          </header>
+
+          <main className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -231,30 +229,30 @@ export default function Templates() {
               <FileText className="size-5 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium">No saved templates yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Generate an invoice in the chat and click Save to store it here.
-              </p>
+              <p className="text-sm font-medium">{t("no_templates_title")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("no_templates_desc")}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => navigate("/")}>
-              Go to chat
+              {t("btn_go_to_chat")}
             </Button>
           </div>
         ) : (
           <div className="group-cards grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {templates.map((t) => (
-              <div key={t.id} className="group">
+            {templates.map((t_) => (
+              <div key={t_.id} className="group">
                 <TemplateCard
-                  template={t}
+                  template={t_}
                   onOpenInEditor={handleOpenInEditor}
                   onDelete={(id) => deleteMutation.mutate(id)}
-                  isDeleting={deletingId === t.id}
+                  isDeleting={deletingId === t_.id}
                 />
               </div>
             ))}
           </div>
         )}
-      </main>
-    </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }

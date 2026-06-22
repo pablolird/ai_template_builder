@@ -8,6 +8,7 @@ import authRouter from './auth/auth.router.js';
 import conversationsRouter from './conversations/conversations.router.js';
 import presetsRouter from './presets/presets.router.js';
 import templatesRouter from './templates/templates.router.js';
+import usersRouter from './users/users.router.js';
 
 const app: Express = express();
 
@@ -29,6 +30,7 @@ app.use('/conversations', conversationsRouter);
 app.use('/presets', presetsRouter);
 app.use('/templates', templatesRouter);
 app.use('/ai', aiRouter);
+app.use('/users', usersRouter);
 
 app.get('/me', authenticate, (req, res) => {
   res.json({ user: req.user });

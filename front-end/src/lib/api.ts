@@ -141,6 +141,26 @@ export const updateConversation = (token: string, id: string, data: { title: str
 export const deleteConversation = (token: string, id: string) =>
   apiFetch<void>(`/conversations/${id}`, token, { method: "DELETE" });
 
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export const updateUserProfile = (token: string, data: { name: string }) =>
+  apiFetch<{ name: string }>('/users/me', token, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+
+export const changeUserPassword = (
+  token: string,
+  data: { currentPassword: string; newPassword: string },
+) =>
+  apiFetch<void>('/users/me/change-password', token, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const deleteUserAccount = (token: string) =>
+  apiFetch<void>('/users/me', token, { method: 'DELETE' });
+
 // ── AI Chat ───────────────────────────────────────────────────────────────────
 
 export interface ChatResponse {
