@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, ExternalLink, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { Check, Download, Eye, Loader2, Pencil, Trash2, X } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -19,14 +19,12 @@ function formatDate(iso: string) {
 
 export interface TemplateCardProps {
   template: Template;
-  onOpenInEditor: (template: Template) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
 }
 
 export function TemplateCard({
   template,
-  onOpenInEditor,
   onDelete,
   isDeleting,
 }: TemplateCardProps) {
@@ -43,8 +41,15 @@ export function TemplateCard({
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["templates"] }),
   });
 
+  function previewTemplate() {
+    const blob = new Blob([template.html_content], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
   function downloadTemplate() {
-    const blob = new Blob([template.html_content], { type: "text/html" });
+    const blob = new Blob([template.html_content], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -131,10 +136,10 @@ export function TemplateCard({
             size="sm"
             variant="outline"
             className="flex-1 h-7 text-xs gap-1.5"
-            onClick={() => onOpenInEditor(template)}
+            onClick={previewTemplate}
           >
-            <ExternalLink className="size-3" />
-            {t("btn_open_editor")}
+            <Eye className="size-3" />
+            {t("btn_preview_template")}
           </Button>
           <Button
             size="icon-sm"

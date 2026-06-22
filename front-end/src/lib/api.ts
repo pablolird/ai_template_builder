@@ -175,6 +175,7 @@ export const sendChat = (
   model: string,
   conversationId?: string,
   presetId?: string,
+  templateHtml?: string,
 ) =>
   apiFetch<ChatResponse>("/ai/chat", token, {
     method: "POST",
@@ -183,5 +184,6 @@ export const sendChat = (
       model,
       conversationId: conversationId ?? undefined,
       presetId: presetId ?? undefined,
+      templateHtml: templateHtml ?? undefined,
     }),
   });

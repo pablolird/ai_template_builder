@@ -72,7 +72,7 @@ const en = {
   no_templates_title: 'No saved templates yet',
   no_templates_desc: 'Generate an invoice in the chat and click Save to store it here.',
   btn_go_to_chat: 'Go to chat',
-  btn_open_editor: 'Open in editor',
+  btn_preview_template: 'Preview',
   btn_download: 'Download',
 
   // Preset sheet
@@ -185,7 +185,7 @@ const es: typeof en = {
   no_templates_title: 'Sin plantillas guardadas aún',
   no_templates_desc: 'Genera una factura en el chat y haz clic en Guardar para almacenarla aquí.',
   btn_go_to_chat: 'Ir al chat',
-  btn_open_editor: 'Abrir en editor',
+  btn_preview_template: 'Vista previa',
   btn_download: 'Descargar',
 
   new_preset: 'Nuevo perfil',
@@ -297,7 +297,7 @@ const pt: typeof en = {
   no_templates_title: 'Nenhum modelo salvo ainda',
   no_templates_desc: 'Gere uma fatura no chat e clique em Salvar para armazená-la aqui.',
   btn_go_to_chat: 'Ir ao chat',
-  btn_open_editor: 'Abrir no editor',
+  btn_preview_template: 'Visualizar',
   btn_download: 'Baixar',
 
   new_preset: 'Novo perfil',

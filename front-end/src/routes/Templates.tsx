@@ -5,7 +5,7 @@ import { FileText, Loader2 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { deleteTemplate, fetchTemplates, type Template } from "@/lib/api";
+import { deleteTemplate, fetchTemplates } from "@/lib/api";
 import NavSidebar from "@/components/NavSidebar";
 import ModeToggle from "@/components/ModeToggle";
 import { TemplateCard } from "@/components/templates/TemplateCard";
@@ -41,17 +41,6 @@ export default function Templates() {
       setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     },
   });
-
-  function handleOpenInEditor(template: Template) {
-    navigate("/", {
-      state: {
-        templateHtml: template.html_content,
-        templateId: template.id,
-        templateName: template.name,
-        presetId: template.preset_id,
-      },
-    });
-  }
 
   return (
     <SidebarProvider>
@@ -91,7 +80,6 @@ export default function Templates() {
                   <div key={template.id} className="group">
                     <TemplateCard
                       template={template}
-                      onOpenInEditor={handleOpenInEditor}
                       onDelete={(id) => deleteMutation.mutate(id)}
                       isDeleting={deletingIds.has(template.id)}
                     />

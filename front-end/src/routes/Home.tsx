@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Download,
@@ -52,7 +51,6 @@ export default function Home() {
   const { getAccessToken } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const location = useLocation();
   const token = getAccessToken();
 
   const [messages, setMessages] = useState<Message[]>([
@@ -102,23 +100,6 @@ export default function Home() {
       localStorage.removeItem("invoice-preset");
     }
   }, [selectedPreset]);
-
-  useEffect(() => {
-    const state = location.state as {
-      templateHtml?: string;
-      templateId?: string;
-      templateName?: string;
-      presetId?: string | null;
-    } | null;
-    if (state?.templateHtml) {
-      setTemplateHtml(state.templateHtml);
-      setCurrentTemplateId(state.templateId ?? null);
-      if (state.templateName) setTemplateName(state.templateName);
-      if (state.presetId) setSelectedPreset(state.presetId);
-      window.history.replaceState({}, "");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Server data ─────────────────────────────────────────────────────────────
 
@@ -230,7 +211,7 @@ export default function Home() {
 
   function downloadTemplate() {
     if (!templateHtml) return;
-    const blob = new Blob([templateHtml], { type: "text/html" });
+    const blob = new Blob([templateHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

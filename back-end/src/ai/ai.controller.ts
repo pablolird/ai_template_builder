@@ -12,6 +12,7 @@ const chatSchema = z.object({
   message: z.string().min(1),
   model: z.enum(ALLOWED_MODELS),
   presetId: z.string().uuid().optional(),
+  templateHtml: z.string().optional(),
 });
 
 export async function chat(req: Request, res: Response): Promise<void> {
@@ -21,7 +22,7 @@ export async function chat(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { conversationId, message, model, presetId } = parsed.data;
+  const { conversationId, message, model, presetId, templateHtml: requestTemplateHtml } = parsed.data;
   const userId = req.user!.id;
 
   // Get or create the conversation
@@ -37,6 +38,13 @@ export async function chat(req: Request, res: Response): Promise<void> {
     const title = message.slice(0, 60).trim();
     const newConv = await conversationsService.createConversation(userId, title, presetId);
     conversation = { ...newConv, messages: [] };
+    // If the user opened an existing template for editing, seed the new conversation with it
+    if (requestTemplateHtml) {
+      await conversationsService.updateConversation(newConv.id, userId, {
+        template_html: requestTemplateHtml,
+      });
+      conversation = { ...conversation, template_html: requestTemplateHtml };
+    }
   }
 
   // Persist the new user message
