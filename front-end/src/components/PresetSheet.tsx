@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -88,7 +89,7 @@ function PresetForm({ preset, logoData, onLogoChange, onSave, onCancel, isSaving
     if (!file) return;
     setLogoError(null);
     if (file.size > 1_000_000) {
-      setLogoError(t("logo_upload_hint"));
+      setLogoError(t("logo_too_large"));
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -115,7 +116,7 @@ function PresetForm({ preset, logoData, onLogoChange, onSave, onCancel, isSaving
       <p className="text-xs text-muted-foreground -mt-2">{t("section_company_info")}</p>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="business_name">Razón Social <span className="text-destructive">*</span></Label>
+        <Label htmlFor="business_name">{t("field_razon_social")} <span className="text-destructive">*</span></Label>
         <Input id="business_name" placeholder="Company legal name" {...register("business_name")} />
         <FieldError message={errors.business_name?.message} />
       </div>
@@ -132,18 +133,18 @@ function PresetForm({ preset, logoData, onLogoChange, onSave, onCancel, isSaving
         </div>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="address">Dirección <span className="text-destructive">*</span></Label>
+        <Label htmlFor="address">{t("field_direccion")} <span className="text-destructive">*</span></Label>
         <Input id="address" placeholder="Street address" {...register("address")} />
         <FieldError message={errors.address?.message} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="city">Ciudad <span className="text-destructive">*</span></Label>
+          <Label htmlFor="city">{t("field_ciudad")} <span className="text-destructive">*</span></Label>
           <Input id="city" placeholder="Asunción" {...register("city")} />
           <FieldError message={errors.city?.message} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="phone">Teléfono <span className="text-destructive">*</span></Label>
+          <Label htmlFor="phone">{t("field_telefono")} <span className="text-destructive">*</span></Label>
           <Input id="phone" placeholder="+595 21 000000" {...register("phone")} />
           <FieldError message={errors.phone?.message} />
         </div>
@@ -185,7 +186,7 @@ function PresetForm({ preset, logoData, onLogoChange, onSave, onCancel, isSaving
           className="cursor-pointer"
         />
         <p className="text-xs text-muted-foreground">{t("logo_upload_hint")}</p>
-        {logoError && <p className="text-destructive text-xs">File too large — {logoError}</p>}
+        {logoError && <p className="text-destructive text-xs">{logoError}</p>}
       </div>
 
       <div className="flex gap-2 pt-2">
@@ -229,6 +230,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["presets"] });
       setEditing(null);
+      toast.success(t("preset_created"));
     },
   });
 
@@ -238,6 +240,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["presets"] });
       setEditing(null);
+      toast.success(t("preset_updated"));
     },
   });
 
@@ -245,6 +248,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
     mutationFn: (id: string) => deletePreset(token!, id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["presets"] });
+      toast.success(t("preset_deleted"));
     },
   });
 

@@ -6,6 +6,7 @@ import { FileText, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { deleteTemplate, fetchTemplates } from "@/lib/api";
+import { toast } from "sonner";
 import NavSidebar from "@/components/NavSidebar";
 import ModeToggle from "@/components/ModeToggle";
 import { TemplateCard } from "@/components/templates/TemplateCard";
@@ -36,6 +37,7 @@ export default function Templates() {
     onSuccess: (id) => {
       setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
       void queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success(t("template_deleted"));
     },
     onError: (_err, id) => {
       setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });

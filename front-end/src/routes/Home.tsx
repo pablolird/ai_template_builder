@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Download,
+  ExternalLink,
   FileText,
   Loader2,
   PenLine,
@@ -10,6 +11,7 @@ import {
   Send,
   Sparkles,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -213,6 +215,7 @@ export default function Home() {
     onSuccess: (saved) => {
       if (saved && !currentTemplateId) setCurrentTemplateId(saved.id);
       void queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success(t("template_saved"));
     },
   });
 
@@ -221,8 +224,10 @@ export default function Home() {
   const renameMutation = useMutation({
     mutationFn: (name: string) =>
       updateTemplate(token!, currentTemplateId!, { name }),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ["templates"] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success(t("template_renamed"));
+    },
   });
 
   function downloadTemplate() {
@@ -234,6 +239,15 @@ export default function Home() {
     a.download = `${templateName}.html`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function openInNewTab() {
+    if (!templateHtml) return;
+    const url = URL.createObjectURL(
+      new Blob([templateHtml], { type: "text/html;charset=utf-8" }),
+    );
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
   function startNameEdit() {
@@ -614,6 +628,15 @@ export default function Home() {
                             : t("btn_save")}
                         </Button>
                       )}
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={openInNewTab}
+                        aria-label={t("btn_open_tab")}
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </Button>
                       <Button
                         size="icon-sm"
                         variant="ghost"
