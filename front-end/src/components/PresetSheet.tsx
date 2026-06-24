@@ -29,13 +29,19 @@ import {
 
 const presetSchema = z.object({
   name: z.string().min(1, "Label is required"),
-  business_name: z.string().optional(),
-  ruc: z.string().optional(),
-  timbrado: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  business_name: z.string().min(1, "Business name is required"),
+  ruc: z
+    .string()
+    .min(1, "RUC is required")
+    .regex(/^\d+-\d$/, "Invalid format (e.g. 80000000-0)"),
+  timbrado: z
+    .string()
+    .min(1, "Timbrado is required")
+    .regex(/^\d{8}$/, "Must be exactly 8 digits"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  phone: z.string().min(1, "Phone is required"),
+  email: z.email("Invalid email"),
 });
 
 type PresetFormData = z.infer<typeof presetSchema>;
@@ -86,34 +92,41 @@ function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
       <div className="grid gap-1.5">
         <Label htmlFor="business_name">Razón Social</Label>
         <Input id="business_name" placeholder="Company legal name" {...register("business_name")} />
+        <FieldError message={errors.business_name?.message} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
           <Label htmlFor="ruc">RUC</Label>
           <Input id="ruc" placeholder="80000000-0" {...register("ruc")} />
+          <FieldError message={errors.ruc?.message} />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="timbrado">Timbrado</Label>
           <Input id="timbrado" placeholder="12345678" {...register("timbrado")} />
+          <FieldError message={errors.timbrado?.message} />
         </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="address">Dirección</Label>
         <Input id="address" placeholder="Street address" {...register("address")} />
+        <FieldError message={errors.address?.message} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
           <Label htmlFor="city">Ciudad</Label>
           <Input id="city" placeholder="Asunción" {...register("city")} />
+          <FieldError message={errors.city?.message} />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="phone">Teléfono</Label>
           <Input id="phone" placeholder="+595 21 000000" {...register("phone")} />
+          <FieldError message={errors.phone?.message} />
         </div>
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" placeholder="contact@company.com" {...register("email")} />
+        <FieldError message={errors.email?.message} />
       </div>
 
       <div className="flex gap-2 pt-2">

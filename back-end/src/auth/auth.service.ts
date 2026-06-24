@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 import pool from '../db/db.js';
+import { createPreset } from '../presets/presets.service.js';
 import type { InternalSession, JwtAccessPayload, JwtRefreshPayload, User } from './auth.types.js';
 
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -25,10 +26,23 @@ export async function registerUser(
   const { rows } = await pool.query<User>(
     `INSERT INTO users (username, email, password_hash)
      VALUES ($1, $2, $3)
-     RETURNING id, username, email, created_at AS "createdAt", updated_at AS "updatedAt"`,
+     RETURNING id, username, email, role, created_at AS "createdAt", updated_at AS "updatedAt"`,
     [username.trim(), email.toLowerCase().trim(), passwordHash],
   );
-  return rows[0]!;
+  const user = rows[0]!;
+
+  await createPreset(user.id, {
+    name: 'Empresa Demo',
+    business_name: 'Empresa Demo S.A.',
+    ruc: '80000000-0',
+    timbrado: '12345678',
+    address: 'Av. España 123',
+    city: 'Asunción',
+    phone: '+595 21 000000',
+    email: 'demo@empresa.com.py',
+  });
+
+  return user;
 }
 
 export async function loginUser(email: string, password: string): Promise<InternalSession | null> {
@@ -36,8 +50,9 @@ export async function loginUser(email: string, password: string): Promise<Intern
     id: string;
     username: string;
     email: string;
+    role: 'admin' | 'user';
     password_hash: string;
-  }>('SELECT id, username, email, password_hash FROM users WHERE email = $1', [
+  }>('SELECT id, username, email, role, password_hash FROM users WHERE email = $1', [
     email.toLowerCase().trim(),
   ]);
   const user = rows[0];
@@ -47,15 +62,16 @@ export async function loginUser(email: string, password: string): Promise<Intern
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return null;
 
-  return issueTokenPair(user.id, user.username, user.email);
+  return issueTokenPair(user.id, user.username, user.email, user.role);
 }
 
 export async function createSessionForUser(
   userId: string,
   username: string,
   email: string,
+  role: 'admin' | 'user' = 'user',
 ): Promise<InternalSession> {
-  return issueTokenPair(userId, username, email);
+  return issueTokenPair(userId, username, email, role);
 }
 
 export async function refreshTokens(incomingToken: string): Promise<InternalSession | null> {
@@ -75,13 +91,13 @@ export async function refreshTokens(incomingToken: string): Promise<InternalSess
   );
   if (!rows[0]) return null;
 
-  const { rows: userRows } = await pool.query<{ username: string; email: string }>(
-    'SELECT username, email FROM users WHERE id = $1',
+  const { rows: userRows } = await pool.query<{ username: string; email: string; role: 'admin' | 'user' }>(
+    'SELECT username, email, role FROM users WHERE id = $1',
     [rows[0].user_id],
   );
   if (!userRows[0]) return null;
 
-  return issueTokenPair(rows[0].user_id, userRows[0].username, userRows[0].email);
+  return issueTokenPair(rows[0].user_id, userRows[0].username, userRows[0].email, userRows[0].role);
 }
 
 export async function revokeRefreshToken(incomingToken: string): Promise<void> {
@@ -104,7 +120,7 @@ export function verifyAccessToken(token: string): JwtAccessPayload | null {
   }
 }
 
-async function issueTokenPair(userId: string, username: string, email: string): Promise<InternalSession> {
+async function issueTokenPair(userId: string, username: string, email: string, role: 'admin' | 'user'): Promise<InternalSession> {
   const jti = randomUUID();
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS);
 
@@ -114,7 +130,7 @@ async function issueTokenPair(userId: string, username: string, email: string): 
     expiresAt,
   ]);
 
-  const accessPayload: JwtAccessPayload = { userId, username, email, type: 'access' };
+  const accessPayload: JwtAccessPayload = { userId, username, email, role, type: 'access' };
   const refreshPayload: JwtRefreshPayload = { userId, jti, type: 'refresh' };
 
   const accessToken = jwt.sign(accessPayload, requireEnv('JWT_ACCESS_SECRET'), {
@@ -125,5 +141,5 @@ async function issueTokenPair(userId: string, username: string, email: string): 
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 
-  return { accessToken, refreshToken, user: { id: userId, username, email } };
+  return { accessToken, refreshToken, user: { id: userId, username, email, role } };
 }

@@ -4,16 +4,18 @@ import { z } from 'zod';
 import type { UpdatePresetPayload } from './presets.service.js';
 import * as presetsService from './presets.service.js';
 
-const presetBodySchema = z.object({
+const presetCreateSchema = z.object({
   name: z.string().min(1),
-  business_name: z.string().optional(),
-  ruc: z.string().optional(),
-  timbrado: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  business_name: z.string().min(1),
+  ruc: z.string().regex(/^\d+-\d$/, 'Invalid RUC format (e.g. 80000000-0)'),
+  timbrado: z.string().regex(/^\d{8}$/, 'Timbrado must be exactly 8 digits'),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  phone: z.string().min(1),
+  email: z.email(),
 });
+
+const presetUpdateSchema = presetCreateSchema.partial();
 
 export async function list(req: Request, res: Response): Promise<void> {
   const presets = await presetsService.listPresets(req.user!.id);
@@ -21,7 +23,7 @@ export async function list(req: Request, res: Response): Promise<void> {
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
-  const parsed = presetBodySchema.safeParse(req.body);
+  const parsed = presetCreateSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: z.flattenError(parsed.error) });
     return;
@@ -31,7 +33,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const parsed = presetBodySchema.partial().safeParse(req.body);
+  const parsed = presetUpdateSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: z.flattenError(parsed.error) });
     return;

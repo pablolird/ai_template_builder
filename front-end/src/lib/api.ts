@@ -1,5 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
+export class PaywallError extends Error {
+  constructor() {
+    super('trial_exhausted');
+    this.name = 'PaywallError';
+  }
+}
+
 export interface SessionData {
   access_token: string;
   user: { id: string; email: string; name: string };
@@ -50,6 +57,7 @@ async function apiFetch<T>(
     res = await makeRequest(session.access_token);
   }
 
+  if (res.status === 402) throw new PaywallError();
   if (!res.ok) throw new Error(`API error ${res.status}`);
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

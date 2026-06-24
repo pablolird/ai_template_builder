@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Check,
   Download,
   FileText,
   Loader2,
   PenLine,
   Save,
   Send,
+  Sparkles,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import {
+  PaywallError,
   createTemplate,
   deleteConversation,
   fetchConversation,
@@ -25,6 +28,12 @@ import { ChatMessage, type Message } from "@/components/home/ChatMessage";
 import { TemplateGenerating } from "@/components/home/TemplateGenerating";
 import PresetSheet from "@/components/PresetSheet";
 import ModeToggle from "@/components/ModeToggle";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -48,7 +57,7 @@ const DEEPSEEK_MODELS = [
 const WELCOME_ID = "welcome";
 
 export default function Home() {
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, user } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const token = getAccessToken();
@@ -76,6 +85,10 @@ export default function Home() {
   const [presetSheetOpen, setPresetSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [paywalled, setPaywalled] = useState(
+    () => !!user && localStorage.getItem(`paywalled_${user.id}`) === "1",
+  );
+  const [showPaywallDialog, setShowPaywallDialog] = useState(false);
 
   // Incremented on every new-chat reset or new load; lets async fetches detect they've been superseded.
   const loadOpRef = useRef(0);
@@ -109,21 +122,17 @@ export default function Home() {
     enabled: !!token,
   });
 
-  const { data: presets = [] } = useQuery({
+  const { data: presets = [], isFetched: presetsFetched } = useQuery({
     queryKey: ["presets"],
     queryFn: () => fetchPresets(token!),
     enabled: !!token,
   });
 
   useEffect(() => {
-    if (
-      presets.length > 0 &&
-      selectedPreset &&
-      !presets.some((p) => p.id === selectedPreset)
-    ) {
+    if (presetsFetched && selectedPreset && !presets.some((p) => p.id === selectedPreset)) {
       setSelectedPreset("");
     }
-  }, [presets, selectedPreset]);
+  }, [presets, presetsFetched, selectedPreset]);
 
   // ── New chat ─────────────────────────────────────────────────────────────────
 
@@ -307,16 +316,22 @@ export default function Home() {
         setCurrentTemplateId(null);
         setMobileTab("preview");
       }
-    } catch {
+    } catch (err) {
       if (loadOpRef.current !== sendOpId) return;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: t("err_generic"),
-        },
-      ]);
+      if (err instanceof PaywallError) {
+        if (user) localStorage.setItem(`paywalled_${user.id}`, "1");
+        setPaywalled(true);
+        setShowPaywallDialog(true);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: t("err_generic"),
+          },
+        ]);
+      }
     } finally {
       // Only clear the spinner if this send is still the active one.
       // If the user already switched away, handleNewChat/handleLoadConversation
@@ -428,109 +443,120 @@ export default function Home() {
 
               {/* Input area */}
               <div className="shrink-0 p-3 border-t border-border">
-                <div
-                  className={`rounded-xl border bg-background shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md focus-within:shadow-primary/5 ${noPreset ? "opacity-60" : ""}`}
-                >
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={
-                      noPreset
-                        ? t("placeholder_no_preset")
-                        : t("placeholder_describe")
-                    }
-                    rows={3}
-                    className="resize-none border-0 shadow-none focus-visible:ring-0 text-sm rounded-b-none"
-                    disabled={isLoading || noPreset || loadingConversation}
-                  />
-                  <div className="flex items-center gap-2 px-3 py-2 border-t border-border">
-                    <Select
-                      value={selectedModel}
-                      onValueChange={setSelectedModel}
-                    >
-                      <SelectTrigger className="h-7 text-xs flex-1 md:flex-none md:w-30 border-0 shadow-none bg-transparent hover:bg-muted">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DEEPSEEK_MODELS.map((m) => (
-                          <SelectItem
-                            key={m.id}
-                            value={m.id}
-                            className="text-xs"
-                          >
-                            {m.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Separator orientation="vertical" className="h-4" />
-
-                    <Select
-                      value={selectedPreset}
-                      onValueChange={setSelectedPreset}
-                      disabled={!!currentConversationId}
-                    >
-                      <SelectTrigger
-                        className={`h-7 text-xs flex-1 md:flex-none md:w-36 border-0 shadow-none bg-transparent hover:bg-muted ${
-                          noPreset ? "text-destructive font-medium" : ""
-                        }`}
-                      >
-                        <SelectValue
-                          placeholder={t("select_preset_placeholder")}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {presets.length === 0 ? (
-                          <div className="px-3 py-4 text-xs text-muted-foreground text-center">
-                            {t("no_presets_inline")}
-                          </div>
-                        ) : (
-                          presets.map((p) => (
-                            <SelectItem
-                              key={p.id}
-                              value={p.id}
-                              className="text-xs"
-                            >
-                              {p.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-
-                    <div className="hidden md:block md:flex-1" />
-
-                    <Button
-                      size="icon-sm"
-                      onClick={() => void handleSend()}
-                      disabled={
-                        !input.trim() ||
-                        isLoading ||
-                        noPreset ||
-                        loadingConversation
-                      }
-                    >
-                      <Send className="size-3.5" />
-                    </Button>
+                {paywalled ? (
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-5 text-center">
+                    <p className="text-sm font-semibold text-destructive">{t("paywall_banner_title")}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("paywall_banner_desc")}
+                    </p>
                   </div>
-                </div>
-
-                {noPreset ? (
-                  <p className="text-center text-xs text-destructive mt-2">
-                    {t("prompt_no_preset")}{" "}
-                    <button
-                      className="underline underline-offset-2 hover:opacity-70"
-                      onClick={() => setPresetSheetOpen(true)}
-                    >
-                      {t("word_presets")}
-                    </button>
-                  </p>
                 ) : (
-                  <p className="text-center text-xs text-muted-foreground mt-2">
-                    {t("hint_enter_send")}
-                  </p>
+                  <>
+                    <div
+                      className={`rounded-xl border bg-background shadow-sm transition-all focus-within:border-primary/30 focus-within:shadow-md focus-within:shadow-primary/5 ${noPreset ? "opacity-60" : ""}`}
+                    >
+                      <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={
+                          noPreset
+                            ? t("placeholder_no_preset")
+                            : t("placeholder_describe")
+                        }
+                        rows={3}
+                        className="resize-none border-0 shadow-none focus-visible:ring-0 text-sm rounded-b-none"
+                        disabled={isLoading || noPreset || loadingConversation}
+                      />
+                      <div className="flex items-center gap-2 px-3 py-2 border-t border-border">
+                        <Select
+                          value={selectedModel}
+                          onValueChange={setSelectedModel}
+                        >
+                          <SelectTrigger className="h-7 text-xs flex-1 md:flex-none md:w-30 border-0 shadow-none bg-transparent hover:bg-muted">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEEPSEEK_MODELS.map((m) => (
+                              <SelectItem
+                                key={m.id}
+                                value={m.id}
+                                className="text-xs"
+                              >
+                                {m.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Separator orientation="vertical" className="h-4" />
+
+                        <Select
+                          value={selectedPreset}
+                          onValueChange={setSelectedPreset}
+                          disabled={!!currentConversationId}
+                        >
+                          <SelectTrigger
+                            className={`h-7 text-xs flex-1 md:flex-none md:w-36 border-0 shadow-none bg-transparent hover:bg-muted ${
+                              noPreset ? "text-destructive font-medium" : ""
+                            }`}
+                          >
+                            <SelectValue
+                              placeholder={t("select_preset_placeholder")}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {presets.length === 0 ? (
+                              <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+                                {t("no_presets_inline")}
+                              </div>
+                            ) : (
+                              presets.map((p) => (
+                                <SelectItem
+                                  key={p.id}
+                                  value={p.id}
+                                  className="text-xs"
+                                >
+                                  {p.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+
+                        <div className="hidden md:block md:flex-1" />
+
+                        <Button
+                          size="icon-sm"
+                          onClick={() => void handleSend()}
+                          disabled={
+                            !input.trim() ||
+                            isLoading ||
+                            noPreset ||
+                            loadingConversation
+                          }
+                        >
+                          <Send className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {noPreset ? (
+                      <p className="text-center text-xs text-destructive mt-2">
+                        {t("prompt_no_preset")}{" "}
+                        <button
+                          className="underline underline-offset-2 hover:opacity-70"
+                          onClick={() => setPresetSheetOpen(true)}
+                        >
+                          {t("word_presets")}
+                        </button>
+                      </p>
+                    ) : (
+                      <p className="text-center text-xs text-muted-foreground mt-2">
+                        {t("hint_enter_send")}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -626,6 +652,56 @@ export default function Home() {
       </div>
 
       <PresetSheet open={presetSheetOpen} onOpenChange={setPresetSheetOpen} />
+
+      <AlertDialog open={showPaywallDialog} onOpenChange={setShowPaywallDialog}>
+        <AlertDialogContent className="gap-0 overflow-hidden p-0">
+          <div className="flex flex-col items-center gap-3 bg-gradient-to-b from-primary/10 to-transparent px-6 pb-6 pt-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/20">
+              <Sparkles className="size-7 text-primary" />
+            </div>
+            <AlertDialogTitle className="text-xl">
+              {t("paywall_dialog_title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              {t("paywall_dialog_body_1")}
+            </AlertDialogDescription>
+          </div>
+
+          <div className="space-y-2.5 px-6 py-4">
+            {([
+              t("paywall_feature_unlimited"),
+              t("paywall_feature_customize"),
+              t("paywall_feature_download"),
+            ] as string[]).map((feature) => (
+              <div key={feature} className="flex items-center gap-3">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Check className="size-3 text-primary" />
+                </div>
+                <span className="text-sm">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-2 px-6 pb-6">
+            <p className="pb-1 text-center text-xs text-muted-foreground">
+              {t("paywall_dialog_body_2")}
+            </p>
+            <Button
+              className="w-full bg-gradient-to-br from-primary to-primary/75 text-primary-foreground shadow-sm shadow-primary/20 hover:opacity-90"
+              onClick={() => setShowPaywallDialog(false)}
+            >
+              {t("paywall_contact_us")}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowPaywallDialog(false)}
+            >
+              {t("paywall_got_it")}
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 }

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  role: 'admin' | 'user';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -10,6 +11,7 @@ export interface JwtAccessPayload {
   userId: string;
   username: string;
   email: string;
+  role: 'admin' | 'user';
   type: 'access';
 }
 
@@ -27,5 +29,5 @@ export interface TokenPair {
 export interface InternalSession {
   accessToken: string;
   refreshToken: string;
-  user: { id: string; username: string; email: string };
+  user: { id: string; username: string; email: string; role: 'admin' | 'user' };
 }

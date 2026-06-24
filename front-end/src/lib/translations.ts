@@ -107,6 +107,18 @@ const en = {
     'This action cannot be undone. All your templates, presets, and conversations will be permanently deleted.',
   confirm_delete_btn: 'Yes, delete my account',
 
+  // Paywall
+  paywall_banner_title: 'Free trial used',
+  paywall_banner_desc: "You've used your 1 free prompt. Contact us to get full access.",
+  paywall_dialog_title: 'Your free trial is complete',
+  paywall_dialog_body_1: "You've used your 1 free AI-generated invoice template. We hope it gave you a taste of what's possible.",
+  paywall_dialog_body_2: 'To keep generating and customising templates, reach out to us to unlock full access.',
+  paywall_got_it: 'Maybe later',
+  paywall_feature_unlimited: 'Unlimited AI template generation',
+  paywall_feature_customize: 'Full customization & editing',
+  paywall_feature_download: 'Download & export to HTML',
+  paywall_contact_us: 'Contact us to unlock',
+
   // Settings
   settings_title: 'Settings',
   section_preferences: 'Preferences',
@@ -220,6 +232,17 @@ const es: typeof en = {
     'Esta acción no se puede deshacer. Todas tus plantillas, perfiles y conversaciones se eliminarán permanentemente.',
   confirm_delete_btn: 'Sí, eliminar mi cuenta',
 
+  paywall_banner_title: 'Prueba gratuita agotada',
+  paywall_banner_desc: 'Has usado tu prompt gratuito. Contáctanos para obtener acceso completo.',
+  paywall_dialog_title: 'Tu prueba gratuita ha terminado',
+  paywall_dialog_body_1: 'Has usado tu plantilla de factura gratuita generada por IA. Esperamos que te haya dado una idea de lo que es posible.',
+  paywall_dialog_body_2: 'Para seguir generando y personalizando plantillas, contáctanos para desbloquear el acceso completo.',
+  paywall_got_it: 'Quizás después',
+  paywall_feature_unlimited: 'Generación ilimitada de plantillas',
+  paywall_feature_customize: 'Personalización y edición completa',
+  paywall_feature_download: 'Descarga y exportación a HTML',
+  paywall_contact_us: 'Contáctanos para desbloquear',
+
   settings_title: 'Configuración',
   section_preferences: 'Preferencias',
   setting_language_desc: 'Idioma de la interfaz',
@@ -331,6 +354,17 @@ const pt: typeof en = {
   delete_warning:
     'Esta ação não pode ser desfeita. Todos os seus modelos, perfis e conversas serão excluídos permanentemente.',
   confirm_delete_btn: 'Sim, excluir minha conta',
+
+  paywall_banner_title: 'Avaliação gratuita esgotada',
+  paywall_banner_desc: "Você usou seu prompt gratuito. Entre em contato conosco para obter acesso completo.",
+  paywall_dialog_title: 'Sua avaliação gratuita foi concluída',
+  paywall_dialog_body_1: "Você usou seu modelo de fatura gratuito gerado por IA. Esperamos que tenha dado uma ideia do que é possível.",
+  paywall_dialog_body_2: 'Para continuar gerando e personalizando modelos, entre em contato conosco para desbloquear o acesso completo.',
+  paywall_got_it: 'Talvez depois',
+  paywall_feature_unlimited: 'Geração ilimitada de templates',
+  paywall_feature_customize: 'Personalização e edição completa',
+  paywall_feature_download: 'Download e exportação para HTML',
+  paywall_contact_us: 'Fale conosco para desbloquear',
 
   settings_title: 'Configurações',
   section_preferences: 'Preferências',

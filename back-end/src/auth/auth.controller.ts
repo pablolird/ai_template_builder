@@ -52,7 +52,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   try {
     const user = await registerUser(name, email, password);
-    const session = await createSessionForUser(user.id, user.username, user.email);
+    const session = await createSessionForUser(user.id, user.username, user.email, user.role);
     setRefreshCookie(res, session.refreshToken);
     res.status(201).json({
       access_token: session.accessToken,

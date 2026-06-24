@@ -17,6 +17,6 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     return;
   }
 
-  req.user = { id: payload.userId, username: payload.username, email: payload.email };
+  req.user = { id: payload.userId, username: payload.username, email: payload.email, role: payload.role ?? 'user' };
   next();
 }
