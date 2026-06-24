@@ -83,11 +83,9 @@ export function AppSidebar({
           <SidebarGroupLabel>{t("sidebar_chats")}</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={onNewChat}>
-                  <SquarePen />
-                  <span>{t("sidebar_new_chat")}</span>
-                </button>
+              <SidebarMenuButton onClick={onNewChat}>
+                <SquarePen />
+                <span>{t("sidebar_new_chat")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -100,13 +98,11 @@ export function AppSidebar({
                   className={`flex items-center gap-1 group rounded-md px-2 py-1.5 hover:bg-sidebar-accent cursor-pointer ${
                     c.id === activeConversationId ? "bg-sidebar-accent" : ""
                   }`}
+                  onClick={() => onConversationClick(c.id)}
                 >
-                  <button
-                    className="flex-1 text-left text-xs text-sidebar-foreground truncate"
-                    onClick={() => onConversationClick(c.id)}
-                  >
+                  <span className="flex-1 text-left text-xs text-sidebar-foreground truncate">
                     {c.title}
-                  </button>
+                  </span>
                   <button
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
                     onClick={(e) => {
@@ -129,22 +125,15 @@ export function AppSidebar({
           </SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button
-                  className="w-full"
-                  onClick={() => navigate("/templates")}
-                >
-                  <FileText />
-                  <span>{t("sidebar_my_templates")}</span>
-                </button>
+              <SidebarMenuButton onClick={() => navigate("/templates")}>
+                <FileText />
+                <span>{t("sidebar_my_templates")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={onPresetsClick}>
-                  <LayoutTemplate />
-                  <span>{t("sidebar_presets")}</span>
-                </button>
+              <SidebarMenuButton onClick={onPresetsClick}>
+                <LayoutTemplate />
+                <span>{t("sidebar_presets")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -154,22 +143,15 @@ export function AppSidebar({
           <SidebarGroupLabel>{t("sidebar_account")}</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button className="w-full" onClick={() => navigate("/profile")}>
-                  <User />
-                  <span>{t("sidebar_profile")}</span>
-                </button>
+              <SidebarMenuButton onClick={() => navigate("/profile")}>
+                <User />
+                <span>{t("sidebar_profile")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <button
-                  className="w-full"
-                  onClick={() => navigate("/settings")}
-                >
-                  <Settings />
-                  <span>{t("sidebar_settings")}</span>
-                </button>
+              <SidebarMenuButton onClick={() => navigate("/settings")}>
+                <Settings />
+                <span>{t("sidebar_settings")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

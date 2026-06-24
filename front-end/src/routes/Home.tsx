@@ -129,8 +129,15 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (presetsFetched && selectedPreset && !presets.some((p) => p.id === selectedPreset)) {
+    if (!presetsFetched) return;
+    const valid = presets.some((p) => p.id === selectedPreset);
+    if (selectedPreset && !valid) {
       setSelectedPreset("");
+      return;
+    }
+    if (!selectedPreset) {
+      const demo = presets.find((p) => p.name === "Empresa Demo");
+      if (demo) setSelectedPreset(demo.id);
     }
   }, [presets, presetsFetched, selectedPreset]);
 

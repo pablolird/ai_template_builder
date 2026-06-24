@@ -42,7 +42,6 @@ const registerSchema = z
 type LoginData = z.infer<typeof loginSchema>;
 type RegisterData = z.infer<typeof registerSchema>;
 
-
 const LANGS: { value: Lang; label: string }[] = [
   { value: "en", label: "EN" },
   { value: "es", label: "ES" },
@@ -77,7 +76,9 @@ export default function Login() {
       navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setLoginError(msg === "401" ? t("err_invalid_credentials") : t("err_generic"));
+      setLoginError(
+        msg === "401" ? t("err_invalid_credentials") : t("err_generic"),
+      );
     }
   }
 
@@ -88,7 +89,9 @@ export default function Login() {
       navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setRegisterError(msg === "409" ? t("err_email_exists") : t("err_generic"));
+      setRegisterError(
+        msg === "409" ? t("err_email_exists") : t("err_generic"),
+      );
     }
   }
 
@@ -129,7 +132,9 @@ export default function Login() {
           <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             {t("login_title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("login_subtitle")}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t("login_subtitle")}
+          </p>
         </div>
 
         <Tabs defaultValue="login" className="w-full max-w-sm">
@@ -155,29 +160,39 @@ export default function Login() {
                       placeholder="you@example.com"
                       {...loginForm.register("email")}
                     />
-                    <FieldError message={loginForm.formState.errors.email?.message} />
+                    <FieldError
+                      message={loginForm.formState.errors.email?.message}
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="login-password">{t("field_password")}</Label>
+                    <Label htmlFor="login-password">
+                      {t("field_password")}
+                    </Label>
                     <Input
                       id="login-password"
                       type="password"
                       placeholder="••••••••"
                       {...loginForm.register("password")}
                     />
-                    <FieldError message={loginForm.formState.errors.password?.message} />
+                    <FieldError
+                      message={loginForm.formState.errors.password?.message}
+                    />
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col gap-2 mt-2">
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full mt-3"
                     disabled={loginForm.formState.isSubmitting}
                   >
-                    {loginForm.formState.isSubmitting ? t("btn_signing_in") : t("btn_sign_in")}
+                    {loginForm.formState.isSubmitting
+                      ? t("btn_signing_in")
+                      : t("btn_sign_in")}
                   </Button>
                   {loginError && (
-                    <p className="text-destructive text-sm text-center">{loginError}</p>
+                    <p className="text-destructive text-sm text-center">
+                      {loginError}
+                    </p>
                   )}
                 </CardFooter>
               </form>
@@ -201,7 +216,9 @@ export default function Login() {
                       placeholder="John Doe"
                       {...registerForm.register("name")}
                     />
-                    <FieldError message={registerForm.formState.errors.name?.message} />
+                    <FieldError
+                      message={registerForm.formState.errors.name?.message}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="reg-email">{t("field_email")}</Label>
@@ -211,7 +228,9 @@ export default function Login() {
                       placeholder="you@example.com"
                       {...registerForm.register("email")}
                     />
-                    <FieldError message={registerForm.formState.errors.email?.message} />
+                    <FieldError
+                      message={registerForm.formState.errors.email?.message}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="reg-password">{t("field_password")}</Label>
@@ -221,10 +240,14 @@ export default function Login() {
                       placeholder="••••••••"
                       {...registerForm.register("password")}
                     />
-                    <FieldError message={registerForm.formState.errors.password?.message} />
+                    <FieldError
+                      message={registerForm.formState.errors.password?.message}
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="reg-confirm">{t("field_confirm_password")}</Label>
+                    <Label htmlFor="reg-confirm">
+                      {t("field_confirm_password")}
+                    </Label>
                     <Input
                       id="reg-confirm"
                       type="password"
@@ -232,14 +255,16 @@ export default function Login() {
                       {...registerForm.register("confirmPassword")}
                     />
                     <FieldError
-                      message={registerForm.formState.errors.confirmPassword?.message}
+                      message={
+                        registerForm.formState.errors.confirmPassword?.message
+                      }
                     />
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col gap-2 mt-2">
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full mt-3"
                     disabled={registerForm.formState.isSubmitting}
                   >
                     {registerForm.formState.isSubmitting
@@ -247,7 +272,9 @@ export default function Login() {
                       : t("btn_create_account")}
                   </Button>
                   {registerError && (
-                    <p className="text-destructive text-sm text-center">{registerError}</p>
+                    <p className="text-destructive text-sm text-center">
+                      {registerError}
+                    </p>
                   )}
                 </CardFooter>
               </form>
