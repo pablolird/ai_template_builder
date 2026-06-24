@@ -88,11 +88,56 @@ ${presetBlock}${editModeBlock}`;
 // deepseek-reasoner (R1) does not support response_format — only use it for chat models
 const SUPPORTS_JSON_FORMAT = new Set(['deepseek-chat']);
 
-// R1 sometimes wraps its JSON in markdown code fences despite instructions
+export class MessageExtractor {
+  private phase: 'seeking' | 'in_value' | 'done' = 'seeking';
+  private buffer = '';
+  private pos = 0;
+
+  push(chunk: string): string[] {
+    if (this.phase === 'done') return [];
+    this.buffer += chunk;
+    const chars: string[] = [];
+
+    if (this.phase === 'seeking') {
+      const search = this.buffer.slice(this.pos);
+      const match = search.match(/"message"\s*:\s*"/);
+      if (!match) {
+        // Keep last 20 chars in case the key spans chunk boundaries
+        this.pos = Math.max(0, this.buffer.length - 20);
+        return chars;
+      }
+      this.pos += match.index! + match[0].length;
+      this.phase = 'in_value';
+    }
+
+    while (this.pos < this.buffer.length) {
+      const c = this.buffer[this.pos]!;
+      if (c === '\\') {
+        if (this.pos + 1 >= this.buffer.length) break; // wait for next chunk
+        const next = this.buffer[this.pos + 1]!;
+        const escMap: Record<string, string> = { '"': '"', '\\': '\\', n: '\n', r: '\r', t: '\t' };
+        chars.push(escMap[next] ?? next);
+        this.pos += 2;
+      } else if (c === '"') {
+        this.phase = 'done';
+        this.pos++;
+        break;
+      } else {
+        chars.push(c);
+        this.pos++;
+      }
+    }
+
+    return chars;
+  }
+}
+
 function extractJson(raw: string): string {
   const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   return fenceMatch ? fenceMatch[1]!.trim() : raw.trim();
 }
+
+export { extractJson as extractJsonPublic };
 
 export async function chat(
   messages: ChatMessage[],
@@ -136,4 +181,24 @@ export async function chat(
   }
 
   return result;
+}
+
+export async function createStream(
+  messages: ChatMessage[],
+  model: string,
+  preset: Preset | null,
+  currentTemplate?: string,
+) {
+  const client = getClient();
+  const systemPrompt = buildSystemPrompt(preset, currentTemplate);
+
+  return client.chat.completions.create({
+    model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ],
+    stream: true,
+    ...(SUPPORTS_JSON_FORMAT.has(model) ? { response_format: { type: 'json_object' } } : {}),
+  });
 }

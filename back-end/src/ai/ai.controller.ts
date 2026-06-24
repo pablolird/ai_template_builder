@@ -5,6 +5,7 @@ import * as conversationsService from '../conversations/conversations.service.js
 import pool from '../db/db.js';
 import { getPreset } from '../presets/presets.service.js';
 import * as aiService from './ai.service.js';
+import type { SSEEvent } from './ai.types.js';
 
 const ALLOWED_MODELS = ['deepseek-chat', 'deepseek-reasoner'] as const;
 
@@ -16,18 +17,27 @@ const chatSchema = z.object({
   templateHtml: z.string().optional(),
 });
 
-export async function chat(req: Request, res: Response): Promise<void> {
+type SetupResult = {
+  conversation: Awaited<ReturnType<typeof conversationsService.getConversation>> & { messages: { role: 'user' | 'assistant'; content: string }[] };
+  history: { role: 'user' | 'assistant'; content: string }[];
+  preset: Awaited<ReturnType<typeof getPreset>>;
+  model: string;
+};
+
+async function setupChat(
+  req: Request,
+  sendError: (status: number, body: object) => void,
+): Promise<SetupResult | null> {
   const parsed = chatSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: z.flattenError(parsed.error) });
-    return;
+    sendError(400, { error: z.flattenError(parsed.error) });
+    return null;
   }
 
   const { conversationId, message, model, presetId, templateHtml: requestTemplateHtml } = parsed.data;
   const userId = req.user!.id;
   const userRole = req.user!.role;
 
-  // Enforce 1-prompt trial limit for non-admin users (atomic to prevent race conditions)
   if (userRole !== 'admin') {
     const { rows } = await pool.query<{ id: string }>(
       `UPDATE users SET ai_prompts_used = ai_prompts_used + 1
@@ -36,25 +46,23 @@ export async function chat(req: Request, res: Response): Promise<void> {
       [userId],
     );
     if (rows.length === 0) {
-      res.status(402).json({ error: 'trial_exhausted' });
-      return;
+      sendError(402, { error: 'trial_exhausted' });
+      return null;
     }
   }
 
-  // Get or create the conversation
   let conversation: Awaited<ReturnType<typeof conversationsService.getConversation>>;
 
   if (conversationId) {
     conversation = await conversationsService.getConversation(conversationId, userId);
     if (!conversation) {
-      res.status(404).json({ error: 'Conversation not found' });
-      return;
+      sendError(404, { error: 'Conversation not found' });
+      return null;
     }
   } else {
     const title = message.slice(0, 60).trim();
     const newConv = await conversationsService.createConversation(userId, title, presetId);
     conversation = { ...newConv, messages: [] };
-    // If the user opened an existing template for editing, seed the new conversation with it
     if (requestTemplateHtml) {
       await conversationsService.updateConversation(newConv.id, userId, {
         template_html: requestTemplateHtml,
@@ -63,20 +71,25 @@ export async function chat(req: Request, res: Response): Promise<void> {
     }
   }
 
-  // Persist the new user message
   await conversationsService.addMessage(conversation.id, 'user', message);
 
-  // Build the full message history for the AI
   const history = [
     ...conversation.messages.map((m) => ({ role: m.role, content: m.content })),
     { role: 'user' as const, content: message },
   ];
 
-  // Resolve preset (from conversation or from the request for a new conversation)
   const resolvedPresetId = conversation.preset_id ?? presetId;
   const preset = resolvedPresetId ? await getPreset(resolvedPresetId, userId) : null;
 
-  // Call the AI
+  return { conversation: conversation as SetupResult['conversation'], history, preset, model };
+}
+
+export async function chat(req: Request, res: Response): Promise<void> {
+  const setup = await setupChat(req, (status, body) => res.status(status).json(body));
+  if (!setup) return;
+
+  const { conversation, history, preset, model } = setup;
+
   let aiResponse: Awaited<ReturnType<typeof aiService.chat>>;
   try {
     aiResponse = await aiService.chat(history, model, preset, conversation.template_html ?? undefined);
@@ -86,17 +99,106 @@ export async function chat(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // Persist the AI response
   if (aiResponse.message) {
     await conversationsService.addMessage(conversation.id, 'assistant', aiResponse.message);
   }
 
-  // Keep the conversation's template_html in sync with the latest generated template
   if (aiResponse.templateHtml) {
-    await conversationsService.updateConversation(conversation.id, userId, {
+    await conversationsService.updateConversation(conversation.id, req.user!.id, {
       template_html: aiResponse.templateHtml,
     });
   }
 
   res.json({ conversationId: conversation.id, ...aiResponse });
+}
+
+export async function chatStream(req: Request, res: Response): Promise<void> {
+  const sendSSE = (event: SSEEvent) => res.write(`data: ${JSON.stringify(event)}\n\n`);
+
+  // SSE errors before headers are flushed go out as regular HTTP status codes.
+  // After flushHeaders(), we use SSE error events instead.
+  let headersFlashed = false;
+
+  const setup = await setupChat(req, (status, body) => {
+    if (!headersFlashed) {
+      res.status(status).json(body);
+    } else {
+      const code =
+        status === 402 ? 'trial_exhausted' :
+        status === 404 ? 'not_found' :
+        'ai_error';
+      sendSSE({ type: 'error', code });
+      res.end();
+    }
+  });
+  if (!setup) return;
+
+  const { conversation, history, preset, model } = setup;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  headersFlashed = true;
+
+  sendSSE({ type: 'init', conversationId: conversation.id });
+
+  try {
+    const stream = await aiService.createStream(history, model, preset, conversation.template_html ?? undefined);
+
+    let fullContent = '';
+    const extractor = new aiService.MessageExtractor();
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta as Record<string, unknown>;
+
+      const reasoning = delta['reasoning_content'];
+      if (typeof reasoning === 'string' && reasoning) {
+        sendSSE({ type: 'reasoning', delta: reasoning });
+      }
+
+      const content = typeof delta['content'] === 'string' ? delta['content'] : '';
+      if (content) {
+        fullContent += content;
+        const chars = extractor.push(content);
+        for (const c of chars) {
+          sendSSE({ type: 'message_delta', delta: c });
+        }
+      }
+    }
+
+    const raw = aiService.extractJsonPublic(fullContent);
+    let parsedMessage: string | undefined;
+    let parsedHtml: string | undefined;
+    try {
+      const obj = JSON.parse(raw) as Record<string, unknown>;
+      parsedMessage = typeof obj['message'] === 'string' ? obj['message'] : undefined;
+      parsedHtml = typeof obj['templateHtml'] === 'string' ? obj['templateHtml'] : undefined;
+    } catch {
+      parsedMessage = raw;
+    }
+
+    if (preset?.logo_data && parsedHtml) {
+      parsedHtml = parsedHtml.replace('LOGO_PLACEHOLDER', preset.logo_data);
+    }
+
+    if (parsedMessage) {
+      await conversationsService.addMessage(conversation.id, 'assistant', parsedMessage);
+    }
+    if (parsedHtml) {
+      await conversationsService.updateConversation(conversation.id, req.user!.id, {
+        template_html: parsedHtml,
+      });
+    }
+
+    const doneEvent: { type: 'done'; message?: string; templateHtml?: string } = { type: 'done' };
+    if (parsedMessage) doneEvent.message = parsedMessage;
+    if (parsedHtml) doneEvent.templateHtml = parsedHtml;
+    sendSSE(doneEvent);
+    res.end();
+  } catch (err) {
+    console.error('[AI] Stream failed for model "%s":', model, err);
+    sendSSE({ type: 'error', code: 'ai_error' });
+    res.end();
+  }
 }

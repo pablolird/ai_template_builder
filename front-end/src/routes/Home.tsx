@@ -22,7 +22,7 @@ import {
   fetchConversation,
   fetchConversations,
   fetchPresets,
-  sendChat,
+  streamChat,
   updateTemplate,
 } from "@/lib/api";
 import { AppSidebar } from "@/components/home/AppSidebar";
@@ -86,6 +86,9 @@ export default function Home() {
 
   const [presetSheetOpen, setPresetSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState("");
+  const [streamingReasoning, setStreamingReasoning] = useState("");
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [loadingConversation, setLoadingConversation] = useState(false);
   const [paywalled, setPaywalled] = useState(
     () => !!user && localStorage.getItem(`paywalled_${user.id}`) === "1",
@@ -102,7 +105,7 @@ export default function Home() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streamingMessage, streamingReasoning]);
 
   useEffect(() => {
     localStorage.setItem("invoice-model", selectedModel);
@@ -146,10 +149,14 @@ export default function Home() {
   // ── New chat ─────────────────────────────────────────────────────────────────
 
   function handleNewChat() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     loadOpRef.current += 1;
     setMessages([{ id: WELCOME_ID, role: "assistant", content: "" }]);
     setInput("");
     setIsLoading(false);
+    setStreamingMessage("");
+    setStreamingReasoning("");
     setCurrentConversationId(null);
     setTemplateHtml(null);
     setTemplateName("Invoice Template");
@@ -160,6 +167,10 @@ export default function Home() {
 
   async function handleLoadConversation(id: string) {
     if (id === currentConversationId) return;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setStreamingMessage("");
+    setStreamingReasoning("");
     loadOpRef.current += 1;
     const opId = loadOpRef.current;
     setLoadingConversation(true);
@@ -288,8 +299,6 @@ export default function Home() {
     const trimmed = input.trim();
     if (!trimmed || isLoading || noPreset) return;
 
-    // Snapshot the current op counter so we can detect if the user switched
-    // away (new chat / different conversation) before the response arrives.
     const sendOpId = loadOpRef.current;
 
     const userMsg: Message = {
@@ -304,46 +313,87 @@ export default function Home() {
     setInput("");
     setIsLoading(true);
 
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
+
     try {
-      const response = await sendChat(
+      await streamChat(
         token!,
-        trimmed,
-        selectedModel,
-        currentConversationId ?? undefined,
-        currentConversationId ? undefined : selectedPreset,
+        {
+          message: trimmed,
+          model: selectedModel,
+          conversationId: currentConversationId ?? undefined,
+          presetId: currentConversationId ? undefined : selectedPreset,
+        },
+        (event) => {
+          if (loadOpRef.current !== sendOpId) return;
+
+          switch (event.type) {
+            case "init":
+              if (!currentConversationId) {
+                setCurrentConversationId(event.conversationId);
+                void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+              }
+              setIsLoading(false);
+              break;
+
+            case "reasoning":
+              setStreamingReasoning((prev) => prev + event.delta);
+              break;
+
+            case "message_delta":
+              setStreamingMessage((prev) => prev + event.delta);
+              break;
+
+            case "done":
+              if (event.message) {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: (Date.now() + 1).toString(),
+                    role: "assistant",
+                    content: event.message!,
+                  },
+                ]);
+              }
+              if (event.templateHtml) {
+                setTemplateHtml(event.templateHtml);
+                setCurrentTemplateId(null);
+                setMobileTab("preview");
+              }
+              setStreamingMessage("");
+              setStreamingReasoning("");
+              break;
+
+            case "error":
+              if (event.code === "trial_exhausted") {
+                if (user) localStorage.setItem(`paywalled_${user.id}`, "1");
+                setPaywalled(true);
+                setShowPaywallDialog(true);
+              } else {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: (Date.now() + 1).toString(),
+                    role: "assistant",
+                    content: t("err_generic"),
+                  },
+                ]);
+              }
+              setStreamingMessage("");
+              setStreamingReasoning("");
+              break;
+          }
+        },
+        ac.signal,
       );
-
-      // If the user switched chats while we were waiting, discard this response.
-      if (loadOpRef.current !== sendOpId) return;
-
-      if (!currentConversationId) {
-        setCurrentConversationId(response.conversationId);
-        void queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      }
-
-      if (response.message) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: response.message!,
-          },
-        ]);
-      }
-
-      if (response.templateHtml) {
-        setTemplateHtml(response.templateHtml);
-        setCurrentTemplateId(null);
-        setMobileTab("preview");
-      }
     } catch (err) {
       if (loadOpRef.current !== sendOpId) return;
       if (err instanceof PaywallError) {
         if (user) localStorage.setItem(`paywalled_${user.id}`, "1");
         setPaywalled(true);
         setShowPaywallDialog(true);
-      } else {
+      } else if ((err as Error).name !== "AbortError") {
         setMessages((prev) => [
           ...prev,
           {
@@ -353,11 +403,12 @@ export default function Home() {
           },
         ]);
       }
+      setStreamingMessage("");
+      setStreamingReasoning("");
     } finally {
-      // Only clear the spinner if this send is still the active one.
-      // If the user already switched away, handleNewChat/handleLoadConversation
-      // already reset isLoading to false.
-      if (loadOpRef.current === sendOpId) setIsLoading(false);
+      if (loadOpRef.current === sendOpId) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -457,6 +508,20 @@ export default function Home() {
                         <Loader2 className="size-4 animate-spin text-muted-foreground" />
                       </div>
                     </div>
+                  )}
+                  {streamingReasoning && (
+                    <p className="text-xs text-muted-foreground italic px-1 mb-2">
+                      {streamingReasoning}
+                    </p>
+                  )}
+                  {streamingMessage && (
+                    <ChatMessage
+                      message={{
+                        id: "streaming",
+                        role: "assistant",
+                        content: streamingMessage + "▋",
+                      }}
+                    />
                   )}
                   <div ref={bottomRef} />
                 </div>

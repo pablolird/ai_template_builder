@@ -215,21 +215,85 @@ export interface ChatResponse {
   templateHtml?: string;
 }
 
-export const sendChat = (
+export type ChatStreamEvent =
+  | { type: "init"; conversationId: string }
+  | { type: "reasoning"; delta: string }
+  | { type: "message_delta"; delta: string }
+  | { type: "done"; message?: string; templateHtml?: string }
+  | { type: "error"; code: string };
+
+export interface StreamChatParams {
+  message: string;
+  model: string;
+  conversationId?: string;
+  presetId?: string;
+  templateHtml?: string;
+}
+
+export async function streamChat(
   token: string,
-  message: string,
-  model: string,
-  conversationId?: string,
-  presetId?: string,
-  templateHtml?: string,
-) =>
-  apiFetch<ChatResponse>("/ai/chat", token, {
-    method: "POST",
-    body: JSON.stringify({
-      message,
-      model,
-      conversationId: conversationId ?? undefined,
-      presetId: presetId ?? undefined,
-      templateHtml: templateHtml ?? undefined,
-    }),
+  params: StreamChatParams,
+  onEvent: (event: ChatStreamEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const body = JSON.stringify({
+    message: params.message,
+    model: params.model,
+    conversationId: params.conversationId,
+    presetId: params.presetId,
+    templateHtml: params.templateHtml,
   });
+
+  const makeRequest = (t: string) =>
+    fetch(`${API_BASE}/ai/chat-stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${t}`,
+      },
+      credentials: "include",
+      body,
+      signal,
+    });
+
+  let res = await makeRequest(token);
+
+  if (res.status === 401) {
+    const session = await refreshSession();
+    onRefreshed?.(session);
+    res = await makeRequest(session.access_token);
+  }
+
+  if (res.status === 402) throw new PaywallError();
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const raw = line.slice(6).trim();
+          if (raw) {
+            try {
+              onEvent(JSON.parse(raw) as ChatStreamEvent);
+            } catch {
+              // ignore malformed SSE lines
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}

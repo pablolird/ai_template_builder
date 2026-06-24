@@ -14,3 +14,10 @@ export interface ChatResponse {
   message?: string | undefined;
   templateHtml?: string | undefined;
 }
+
+export type SSEEvent =
+  | { type: 'init'; conversationId: string }
+  | { type: 'reasoning'; delta: string }
+  | { type: 'message_delta'; delta: string }
+  | { type: 'done'; message?: string; templateHtml?: string }
+  | { type: 'error'; code: 'trial_exhausted' | 'not_found' | 'ai_error' };
