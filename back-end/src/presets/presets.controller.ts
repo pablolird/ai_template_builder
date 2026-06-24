@@ -13,6 +13,7 @@ const presetCreateSchema = z.object({
   city: z.string().min(1),
   phone: z.string().min(1),
   email: z.email(),
+  logo_data: z.string().max(1_500_000).optional(),
 });
 
 const presetUpdateSchema = presetCreateSchema.partial();

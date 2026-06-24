@@ -76,6 +76,7 @@ export interface Preset {
   city: string | null;
   phone: string | null;
   email: string | null;
+  logo_data: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -89,6 +90,7 @@ export interface PresetData {
   city?: string;
   phone?: string;
   email?: string;
+  logo_data?: string;
 }
 
 export const fetchPresets = (token: string) =>

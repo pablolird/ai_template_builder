@@ -11,6 +11,7 @@ export interface Preset {
   city: string | null;
   phone: string | null;
   email: string | null;
+  logo_data: string | null;
   created_at: Date;
   updated_at: Date;
 }

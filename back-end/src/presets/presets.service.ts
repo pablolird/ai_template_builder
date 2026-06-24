@@ -26,12 +26,13 @@ export interface PresetPayload {
   city?: string | undefined;
   phone?: string | undefined;
   email?: string | undefined;
+  logo_data?: string | undefined;
 }
 
 export async function createPreset(userId: string, data: PresetPayload): Promise<Preset> {
   const { rows } = await pool.query<Preset>(
-    `INSERT INTO presets (user_id, name, business_name, ruc, timbrado, address, city, phone, email)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `INSERT INTO presets (user_id, name, business_name, ruc, timbrado, address, city, phone, email, logo_data)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
     [
       userId,
@@ -43,6 +44,7 @@ export async function createPreset(userId: string, data: PresetPayload): Promise
       data.city ?? null,
       data.phone ?? null,
       data.email ?? null,
+      data.logo_data ?? null,
     ],
   );
   return rows[0]!;
@@ -57,6 +59,7 @@ export interface UpdatePresetPayload {
   city?: string | undefined;
   phone?: string | undefined;
   email?: string | undefined;
+  logo_data?: string | undefined;
 }
 
 export async function updatePreset(

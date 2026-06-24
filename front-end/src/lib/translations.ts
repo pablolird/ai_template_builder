@@ -82,10 +82,13 @@ const en = {
   preset_desc_select: 'Select a preset to auto-fill invoice fields when chatting with the AI.',
   preset_desc_fill: 'Fill in your company details for Paraguay invoices.',
   no_presets_msg: 'No presets yet. Create one to auto-fill invoice fields.',
-  field_preset_label: 'Preset label *',
+  field_preset_label: 'Preset label',
   section_company_info: 'Company information',
   btn_update_preset: 'Update preset',
   btn_create_preset: 'Create preset',
+  field_logo: 'Logo',
+  logo_upload_hint: 'PNG or JPG, max 1 MB',
+  btn_remove_logo: 'Remove',
 
   // Profile
   profile_title: 'Profile',
@@ -208,10 +211,13 @@ const es: typeof en = {
   preset_desc_fill: 'Completa los datos de tu empresa para las facturas de Paraguay.',
   no_presets_msg:
     'Sin perfiles aún. Crea uno para rellenar automáticamente los campos de factura.',
-  field_preset_label: 'Etiqueta del perfil *',
+  field_preset_label: 'Etiqueta del perfil',
   section_company_info: 'Información de la empresa',
   btn_update_preset: 'Actualizar perfil',
   btn_create_preset: 'Crear perfil',
+  field_logo: 'Logo',
+  logo_upload_hint: 'PNG o JPG, máx 1 MB',
+  btn_remove_logo: 'Eliminar',
 
   profile_title: 'Perfil',
   section_personal_info: 'Información personal',
@@ -331,10 +337,13 @@ const pt: typeof en = {
   preset_desc_fill: 'Preencha os dados da sua empresa para faturas do Paraguai.',
   no_presets_msg:
     'Nenhum perfil ainda. Crie um para preencher automaticamente os campos da fatura.',
-  field_preset_label: 'Rótulo do perfil *',
+  field_preset_label: 'Rótulo do perfil',
   section_company_info: 'Informações da empresa',
   btn_update_preset: 'Atualizar perfil',
   btn_create_preset: 'Criar perfil',
+  field_logo: 'Logo',
+  logo_upload_hint: 'PNG ou JPG, máx 1 MB',
+  btn_remove_logo: 'Remover',
 
   profile_title: 'Perfil',
   section_personal_info: 'Informações pessoais',

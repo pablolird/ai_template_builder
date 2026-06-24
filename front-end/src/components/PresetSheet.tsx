@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -53,13 +53,18 @@ function FieldError({ message }: { message?: string }) {
 
 interface PresetFormProps {
   preset?: Preset;
+  logoData: string | null;
+  onLogoChange: (v: string | null) => void;
   onSave: (data: PresetData) => void;
   onCancel: () => void;
   isSaving: boolean;
 }
 
-function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
+function PresetForm({ preset, logoData, onLogoChange, onSave, onCancel, isSaving }: PresetFormProps) {
   const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -78,10 +83,30 @@ function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
     },
   });
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoError(null);
+    if (file.size > 1_000_000) {
+      setLogoError(t("logo_upload_hint"));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => onLogoChange(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveLogo() {
+    onLogoChange(null);
+    setLogoError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSave)} className="flex flex-col gap-4 px-4 py-2">
+    <form onSubmit={handleSubmit((formData) => onSave({ ...formData, logo_data: logoData ?? undefined }))} className="flex flex-col gap-4 px-4 py-2">
       <div className="grid gap-1.5">
-        <Label htmlFor="name">{t("field_preset_label")}</Label>
+        <Label htmlFor="name">{t("field_preset_label")} <span className="text-destructive">*</span></Label>
         <Input id="name" placeholder="e.g. My Company" {...register("name")} />
         <FieldError message={errors.name?.message} />
       </div>
@@ -90,43 +115,77 @@ function PresetForm({ preset, onSave, onCancel, isSaving }: PresetFormProps) {
       <p className="text-xs text-muted-foreground -mt-2">{t("section_company_info")}</p>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="business_name">Razón Social</Label>
+        <Label htmlFor="business_name">Razón Social <span className="text-destructive">*</span></Label>
         <Input id="business_name" placeholder="Company legal name" {...register("business_name")} />
         <FieldError message={errors.business_name?.message} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="ruc">RUC</Label>
+          <Label htmlFor="ruc">RUC <span className="text-destructive">*</span></Label>
           <Input id="ruc" placeholder="80000000-0" {...register("ruc")} />
           <FieldError message={errors.ruc?.message} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="timbrado">Timbrado</Label>
+          <Label htmlFor="timbrado">Timbrado <span className="text-destructive">*</span></Label>
           <Input id="timbrado" placeholder="12345678" {...register("timbrado")} />
           <FieldError message={errors.timbrado?.message} />
         </div>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="address">Dirección</Label>
+        <Label htmlFor="address">Dirección <span className="text-destructive">*</span></Label>
         <Input id="address" placeholder="Street address" {...register("address")} />
         <FieldError message={errors.address?.message} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="city">Ciudad</Label>
+          <Label htmlFor="city">Ciudad <span className="text-destructive">*</span></Label>
           <Input id="city" placeholder="Asunción" {...register("city")} />
           <FieldError message={errors.city?.message} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="phone">Teléfono</Label>
+          <Label htmlFor="phone">Teléfono <span className="text-destructive">*</span></Label>
           <Input id="phone" placeholder="+595 21 000000" {...register("phone")} />
           <FieldError message={errors.phone?.message} />
         </div>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
         <Input id="email" type="email" placeholder="contact@company.com" {...register("email")} />
         <FieldError message={errors.email?.message} />
+      </div>
+
+      <Separator />
+      <p className="text-xs text-muted-foreground -mt-2">{t("field_logo")}</p>
+
+      <div className="grid gap-2">
+        {logoData && (
+          <div className="flex items-center gap-3">
+            <img
+              src={logoData}
+              alt="Logo preview"
+              className="h-10 max-w-[120px] object-contain rounded border border-border bg-muted/30 p-1"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleRemoveLogo}
+              className="text-xs"
+            >
+              {t("btn_remove_logo")}
+            </Button>
+          </div>
+        )}
+        <Input
+          ref={fileInputRef}
+          id="logo"
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="cursor-pointer"
+        />
+        <p className="text-xs text-muted-foreground">{t("logo_upload_hint")}</p>
+        {logoError && <p className="text-destructive text-xs">File too large — {logoError}</p>}
       </div>
 
       <div className="flex gap-2 pt-2">
@@ -155,6 +214,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Preset | "new" | null>(null);
+  const [logoData, setLogoData] = useState<string | null>(null);
 
   const token = getAccessToken();
 
@@ -196,6 +256,11 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
     }
   }
 
+  function openEditing(preset: Preset | "new") {
+    setEditing(preset);
+    setLogoData(preset === "new" ? null : (preset.logo_data ?? null));
+  }
+
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
@@ -228,6 +293,8 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
         {editing ? (
           <PresetForm
             preset={editing === "new" ? undefined : editing}
+            logoData={logoData}
+            onLogoChange={setLogoData}
             onSave={handleSave}
             onCancel={() => setEditing(null)}
             isSaving={isSaving}
@@ -238,7 +305,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
               size="sm"
               variant="outline"
               className="w-full justify-start gap-2 mb-1"
-              onClick={() => setEditing("new")}
+              onClick={() => openEditing("new")}
             >
               <Plus className="size-3.5" />
               {t("new_preset")}
@@ -255,6 +322,13 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
                 key={p.id}
                 className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
               >
+                {p.logo_data && (
+                  <img
+                    src={p.logo_data}
+                    alt=""
+                    className="size-6 object-contain rounded shrink-0"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{p.name}</p>
                   {p.business_name && (
@@ -262,7 +336,7 @@ export default function PresetSheet({ open, onOpenChange }: PresetSheetProps) {
                   )}
                 </div>
                 <button
-                  onClick={() => setEditing(p)}
+                  onClick={() => openEditing(p)}
                   className="text-muted-foreground hover:text-foreground p-1 rounded"
                   aria-label="Edit preset"
                 >

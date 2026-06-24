@@ -27,6 +27,7 @@ The user has selected the following company preset — inject these values into 
 - City: ${preset.city ?? 'Not specified'}
 - Phone: ${preset.phone ?? 'Not specified'}
 - Email: ${preset.email ?? 'Not specified'}
+- Logo: ${preset.logo_data ? 'A company logo is provided. In the invoice header include exactly: <img src="LOGO_PLACEHOLDER" alt="Company logo" style="max-height:60px;max-width:200px;object-fit:contain;">' : 'No logo provided; do not include an <img> for the logo.'}
 `
     : 'No company preset selected; use placeholder values for company fields.';
 
@@ -108,8 +109,14 @@ export async function chat(
   }
 
   const obj = parsed as Record<string, unknown>;
-  return {
+  const result: ChatResponse = {
     message: typeof obj['message'] === 'string' ? obj['message'] : undefined,
     templateHtml: typeof obj['templateHtml'] === 'string' ? obj['templateHtml'] : undefined,
   };
+
+  if (preset?.logo_data && result.templateHtml) {
+    result.templateHtml = result.templateHtml.replace('LOGO_PLACEHOLDER', preset.logo_data);
+  }
+
+  return result;
 }
