@@ -63,8 +63,25 @@ Rules:
 - Always return valid JSON. Never wrap it in markdown code fences.
 - The HTML must be fully self-contained: no external stylesheets or scripts.
 - Design for A4 paper (210mm × 297mm) by default unless the user specifies otherwise.
-- Include realistic placeholder rows for line items (product/service, qty, unit price, total).
 - The template should look like an actual Paraguayan invoice with the proper structure.
+
+MANDATORY Paraguayan invoice requirements — always include these regardless of what the user asks:
+
+1. CONDICIÓN DE VENTA: The invoice must display "Contado" or "Crédito" as a labeled field in the header area. Default to "Contado" as a placeholder.
+
+2. IVA BREAKDOWN: Paraguay has three tax rates. The line items table MUST have separate columns for each:
+   - Exentas (tax-exempt amount)
+   - Gravado 5% (amount subject to 5% IVA)
+   - Gravado 10% (amount subject to 10% IVA)
+
+   Below the line items, include a tax summary block with exactly these rows:
+   - Total Exentas
+   - Total Gravado 5%  →  IVA 5% (= Gravado 5% × 5%)
+   - Total Gravado 10% →  IVA 10% (= Gravado 10% × 10%)
+   - Total IVA
+   - TOTAL GENERAL (= Exentas + Gravado 5% + Gravado 10% + Total IVA)
+
+   Use realistic placeholder numbers. Each line item row should place its amount in only one of the three tax columns (the other two left blank or zero).
 ${presetBlock}${editModeBlock}`;
 }
 
