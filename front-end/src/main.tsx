@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import Home from "@/routes/Home";
 import Login from "@/routes/Login";
+import Landing from "@/routes/Landing";
 import Templates from "@/routes/Templates";
 import Profile from "@/routes/Profile";
 import Settings from "@/routes/Settings";
@@ -29,9 +30,10 @@ createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <Routes>
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/chat" element={<Home />} />
                 <Route path="/templates" element={<Templates />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />

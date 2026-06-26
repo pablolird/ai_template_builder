@@ -72,7 +72,7 @@ export default function Templates() {
                   <p className="text-sm font-medium">{t("no_templates_title")}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t("no_templates_desc")}</p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => navigate("/")}>
+                <Button size="sm" variant="outline" onClick={() => navigate("/chat")}>
                   {t("btn_go_to_chat")}
                 </Button>
               </div>

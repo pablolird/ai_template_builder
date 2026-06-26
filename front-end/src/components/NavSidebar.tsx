@@ -68,7 +68,7 @@ export default function NavSidebar() {
             <SidebarGroupLabel>{t("sidebar_chats")}</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={at("/")} onClick={() => navigate("/")}>
+                <SidebarMenuButton isActive={at("/chat")} onClick={() => navigate("/chat")}>
                   <MessageSquare />
                   <span>{t("btn_new_chat")}</span>
                 </SidebarMenuButton>

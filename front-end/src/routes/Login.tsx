@@ -67,14 +67,14 @@ export default function Login() {
   });
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/");
+    if (isAuthenticated) navigate("/chat");
   }, [isAuthenticated, navigate]);
 
   async function handleLogin(data: LoginData) {
     setLoginError(null);
     try {
       await login(data.email, data.password);
-      navigate("/");
+      navigate("/chat");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
       setLoginError(
@@ -87,7 +87,7 @@ export default function Login() {
     setRegisterError(null);
     try {
       await register(data.name, data.email, data.password);
-      navigate("/");
+      navigate("/chat");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
       setRegisterError(
