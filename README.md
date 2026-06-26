@@ -195,9 +195,6 @@ Populate `back-end/.env.qa` or `back-end/.env.prod` before running.
 
 ---
 
-<img width="3024" height="1730" alt="image" src="https://github.com/user-attachments/assets/116ed2d0-7da1-429a-ab64-bad9dcd32bc3" />
-
-
 ## License
 
 MIT
