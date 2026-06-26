@@ -29,6 +29,7 @@ import { AppSidebar } from "@/components/home/AppSidebar";
 import { ChatMessage, type Message } from "@/components/home/ChatMessage";
 import { TemplateGenerating } from "@/components/home/TemplateGenerating";
 import PresetSheet from "@/components/PresetSheet";
+import BrandName from "@/components/BrandName";
 import ModeToggle from "@/components/ModeToggle";
 import {
   AlertDialog,
@@ -388,7 +389,7 @@ export default function Home() {
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold text-foreground truncate flex-1">
-              {t("app_title")}
+              <BrandName />
             </h1>
             <Button
               variant="ghost"

@@ -84,6 +84,7 @@ Conversations with `title`, `preset_id`, `template_html`. Each conversation owns
 | `005_create_conversations.sql` | conversations table |
 | `006_create_messages.sql` | messages table |
 | `007_add_user_role_and_prompt_count.sql` | role + ai_prompts_used on users |
+| `008_add_logo_to_presets.sql` | logo_data column (base64 data URL) on presets |
 
 ## Docker
 

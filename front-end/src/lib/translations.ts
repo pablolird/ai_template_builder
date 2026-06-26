@@ -17,7 +17,7 @@ const en = {
   lang_pt: 'Português',
 
   // Login
-  login_title: 'AI Invoice Template Generator',
+  login_title: 'Facturia',
   login_subtitle: 'Sign in to your account to continue',
   tab_login: 'Login',
   tab_register: 'Register',
@@ -48,7 +48,7 @@ const en = {
   sidebar_sign_out: 'Sign out',
 
   // Home
-  app_title: 'AI Invoice Template Generator',
+  app_title: 'Facturia',
   btn_new_chat: 'New chat',
   tab_chat: 'Chat',
   tab_preview: 'Preview',
@@ -64,7 +64,7 @@ const en = {
   word_presets: 'Presets',
   click_to_rename: 'Click to rename',
   welcome_message:
-    "Hello! I'm your AI invoice template assistant. Select a preset below with your company details, then describe the invoice design you'd like and I'll generate a live preview.",
+    "Hello! I'm Facturia, your AI invoice assistant. Select a preset below with your company details, then describe the invoice design you'd like and I'll generate a live preview.",
 
   // Templates page
   templates_title: 'My Templates',
@@ -160,7 +160,7 @@ const es: typeof en = {
   lang_es: 'Español',
   lang_pt: 'Português',
 
-  login_title: 'Generador de Facturas con IA',
+  login_title: 'Facturia',
   login_subtitle: 'Inicia sesión para continuar',
   tab_login: 'Iniciar sesión',
   tab_register: 'Registrarse',
@@ -189,7 +189,7 @@ const es: typeof en = {
   sidebar_settings: 'Configuración',
   sidebar_sign_out: 'Cerrar sesión',
 
-  app_title: 'Generador de Facturas con IA',
+  app_title: 'Facturia',
   btn_new_chat: 'Nuevo chat',
   tab_chat: 'Chat',
   tab_preview: 'Vista previa',
@@ -205,7 +205,7 @@ const es: typeof en = {
   word_presets: 'Perfiles',
   click_to_rename: 'Clic para renombrar',
   welcome_message:
-    '¡Hola! Soy tu asistente de plantillas de facturas con IA. Selecciona un perfil con los datos de tu empresa, luego describe el diseño de factura que deseas y generaré una vista previa en vivo.',
+    '¡Hola! Soy Facturia, tu asistente de facturas con IA. Selecciona un perfil con los datos de tu empresa, luego describe el diseño de factura que deseas y generaré una vista previa en vivo.',
 
   templates_title: 'Mis plantillas',
   btn_back_to_chat: 'Volver al chat',
@@ -298,7 +298,7 @@ const pt: typeof en = {
   lang_es: 'Español',
   lang_pt: 'Português',
 
-  login_title: 'Gerador de Modelos de Faturas com IA',
+  login_title: 'Facturia',
   login_subtitle: 'Entre na sua conta para continuar',
   tab_login: 'Entrar',
   tab_register: 'Registrar',
@@ -327,7 +327,7 @@ const pt: typeof en = {
   sidebar_settings: 'Configurações',
   sidebar_sign_out: 'Sair',
 
-  app_title: 'Gerador de Modelos de Faturas com IA',
+  app_title: 'Facturia',
   btn_new_chat: 'Nova conversa',
   tab_chat: 'Chat',
   tab_preview: 'Visualizar',
@@ -343,7 +343,7 @@ const pt: typeof en = {
   word_presets: 'Perfis',
   click_to_rename: 'Clique para renomear',
   welcome_message:
-    'Olá! Sou seu assistente de modelos de faturas com IA. Selecione um perfil com os dados da sua empresa, descreva o design de fatura que deseja e eu gerarei uma pré-visualização ao vivo.',
+    'Olá! Sou Facturia, seu assistente de faturas com IA. Selecione um perfil com os dados da sua empresa, descreva o design de fatura que deseja e eu gerarei uma pré-visualização ao vivo.',
 
   templates_title: 'Meus modelos',
   btn_back_to_chat: 'Voltar ao chat',

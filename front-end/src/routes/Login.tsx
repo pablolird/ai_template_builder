@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BrandName from "@/components/BrandName";
 import ModeToggle from "@/components/ModeToggle";
 
 const loginSchema = z.object({
@@ -129,8 +130,8 @@ export default function Login() {
           <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground mb-4 shadow-lg shadow-primary/20">
             <Sparkles className="size-6" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            {t("login_title")}
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <BrandName />
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t("login_subtitle")}
