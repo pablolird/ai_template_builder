@@ -1,0 +1,32 @@
+{
+  "pkg": "facturia-ui",
+  "globalName": "FacturiaUI",
+  "shape": "package",
+  "projectId": "95bba4bc-1f91-429f-822a-3c7ea8a3e111",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": "dist/facturia-ui.css",
+  "extraFonts": ["node_modules/@fontsource-variable/inter/index.css"],
+  "buildCmd": "pnpm -C front-end build && node -e \"const fs=require('fs');const f=fs.readdirSync('front-end/dist/assets').find(n=>n.endsWith('.css'));if(f)fs.copyFileSync('front-end/dist/assets/'+f,'front-end/dist/facturia-ui.css');else process.exit(1)\"",
+  "componentSrcMap": {
+    "AlertDialog": "src/components/ui/alert-dialog.tsx",
+    "Avatar": "src/components/ui/avatar.tsx",
+    "Badge": "src/components/ui/badge.tsx",
+    "Button": "src/components/ui/button.tsx",
+    "Card": "src/components/ui/card.tsx",
+    "DropdownMenu": "src/components/ui/dropdown-menu.tsx",
+    "Input": "src/components/ui/input.tsx",
+    "Label": "src/components/ui/label.tsx",
+    "ScrollArea": "src/components/ui/scroll-area.tsx",
+    "Select": "src/components/ui/select.tsx",
+    "Separator": "src/components/ui/separator.tsx",
+    "Sheet": "src/components/ui/sheet.tsx",
+    "Sidebar": "src/components/ui/sidebar.tsx",
+    "Skeleton": "src/components/ui/skeleton.tsx",
+    "Toaster": "src/components/ui/sonner.tsx",
+    "Tabs": "src/components/ui/tabs.tsx",
+    "Textarea": "src/components/ui/textarea.tsx",
+    "Tooltip": "src/components/ui/tooltip.tsx",
+    "BrandName": "src/components/BrandName.tsx",
+    "ModeToggle": "src/components/ModeToggle.tsx"
+  }
+}
