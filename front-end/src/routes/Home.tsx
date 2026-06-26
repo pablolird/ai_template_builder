@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useChatContext, WELCOME_ID } from "@/context/ChatContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -57,17 +58,31 @@ const DEEPSEEK_MODELS = [
   { id: "deepseek-reasoner", label: "DeepSeek R1 (Reasoner)" },
 ];
 
-const WELCOME_ID = "welcome";
-
 export default function Home() {
   const { getAccessToken, user } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const token = getAccessToken();
 
-  const [messages, setMessages] = useState<Message[]>([
-    { id: WELCOME_ID, role: "assistant", content: "" },
-  ]);
+  const {
+    messages,
+    setMessages,
+    isLoading,
+    setIsLoading,
+    templateHtml,
+    setTemplateHtml,
+    templateName,
+    setTemplateName,
+    currentTemplateId,
+    setCurrentTemplateId,
+    currentConversationId,
+    setCurrentConversationId,
+    mobileTab,
+    setMobileTab,
+    loadOpRef,
+    resetChat,
+  } = useChatContext();
+
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState(
     () => localStorage.getItem("invoice-model") ?? DEEPSEEK_MODELS[0]!.id,
@@ -75,28 +90,13 @@ export default function Home() {
   const [selectedPreset, setSelectedPreset] = useState(
     () => localStorage.getItem("invoice-preset") ?? "",
   );
-  const [currentConversationId, setCurrentConversationId] = useState<
-    string | null
-  >(null);
-
-  const [templateHtml, setTemplateHtml] = useState<string | null>(null);
-  const [templateName, setTemplateName] = useState("Invoice Template");
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(
-    null,
-  );
-
   const [presetSheetOpen, setPresetSheetOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
   const [paywalled, setPaywalled] = useState(
     () => !!user && localStorage.getItem(`paywalled_${user.id}`) === "1",
   );
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
-
-  // Incremented on every new-chat reset or new load; lets async fetches detect they've been superseded.
-  const loadOpRef = useRef(0);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const nameBeforeEdit = useRef(templateName);
@@ -147,14 +147,8 @@ export default function Home() {
   // ── New chat ─────────────────────────────────────────────────────────────────
 
   function handleNewChat() {
-    loadOpRef.current += 1;
-    setMessages([{ id: WELCOME_ID, role: "assistant", content: "" }]);
+    resetChat();
     setInput("");
-    setIsLoading(false);
-    setCurrentConversationId(null);
-    setTemplateHtml(null);
-    setTemplateName("Invoice Template");
-    setCurrentTemplateId(null);
   }
 
   // ── Load conversation ─────────────────────────────────────────────────────────
@@ -162,6 +156,7 @@ export default function Home() {
   async function handleLoadConversation(id: string) {
     if (id === currentConversationId) return;
     loadOpRef.current += 1;
+    setIsLoading(false);
     const opId = loadOpRef.current;
     setLoadingConversation(true);
     try {
