@@ -20,8 +20,7 @@ https://github.com/user-attachments/assets/8304aa39-8990-4195-9a50-aa1265800090
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 
-<!-- DEMO: Replace the line below with your screen recording GIF once you have one -->
-<!-- ![Facturia Demo](https://github.com/pablolird/ai_template_builder/assets/demo.gif) -->
+https://github.com/user-attachments/assets/8304aa39-8990-4195-9a50-aa1265800090
 
 </div>
 
@@ -77,13 +76,6 @@ You describe what you need ("professional invoice for a consulting service, dark
 ---
 
 ## Demo
-
-<!-- SCREENSHOT: Add a screenshot of the main chat+preview interface here -->
-<!-- ![Home](docs/screenshots/home.png) -->
-
-> **Recording suggestion:** A short screen recording showing the full flow —
-> login → select preset → type a description → watch the skeleton animate → invoice appears → download — makes the best demo asset.
-> Drop a `.gif` or `.mp4` into `docs/screenshots/` and uncomment the line above.
 
 ---
 
