@@ -86,6 +86,7 @@ export default function Home() {
 
   const [presetSheetOpen, setPresetSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [streamingReasoning, setStreamingReasoning] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -155,6 +156,7 @@ export default function Home() {
     setMessages([{ id: WELCOME_ID, role: "assistant", content: "" }]);
     setInput("");
     setIsLoading(false);
+    setIsStreaming(false);
     setStreamingMessage("");
     setStreamingReasoning("");
     setCurrentConversationId(null);
@@ -169,6 +171,7 @@ export default function Home() {
     if (id === currentConversationId) return;
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
+    setIsStreaming(false);
     setStreamingMessage("");
     setStreamingReasoning("");
     loadOpRef.current += 1;
@@ -335,6 +338,7 @@ export default function Home() {
                 void queryClient.invalidateQueries({ queryKey: ["conversations"] });
               }
               setIsLoading(false);
+              setIsStreaming(true);
               break;
 
             case "reasoning":
@@ -361,6 +365,7 @@ export default function Home() {
                 setCurrentTemplateId(null);
                 setMobileTab("preview");
               }
+              setIsStreaming(false);
               setStreamingMessage("");
               setStreamingReasoning("");
               break;
@@ -380,6 +385,7 @@ export default function Home() {
                   },
                 ]);
               }
+              setIsStreaming(false);
               setStreamingMessage("");
               setStreamingReasoning("");
               break;
@@ -403,6 +409,7 @@ export default function Home() {
           },
         ]);
       }
+      setIsStreaming(false);
       setStreamingMessage("");
       setStreamingReasoning("");
     } finally {
@@ -716,7 +723,7 @@ export default function Home() {
                 )}
               </div>
 
-              {isLoading ? (
+              {isLoading || isStreaming ? (
                 <TemplateGenerating />
               ) : templateHtml ? (
                 <iframe
