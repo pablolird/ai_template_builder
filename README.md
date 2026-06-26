@@ -197,4 +197,4 @@ Populate `back-end/.env.qa` or `back-end/.env.prod` before running.
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 Pablo Lird
