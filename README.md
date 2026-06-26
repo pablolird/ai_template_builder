@@ -6,6 +6,12 @@
 
 *Describe the invoice you want. Get print-ready HTML in seconds.*
 
+
+
+https://github.com/user-attachments/assets/8304aa39-8990-4195-9a50-aa1265800090
+
+
+
 [![CI](https://github.com/pablolird/ai_template_builder/actions/workflows/ci.yml/badge.svg)](https://github.com/pablolird/ai_template_builder/actions/workflows/ci.yml)
 ![Node.js](https://img.shields.io/badge/Node.js_22-339933?style=flat-square&logo=nodedotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
