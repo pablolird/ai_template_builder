@@ -71,6 +71,8 @@ You describe what you need ("professional invoice for a consulting service, dark
 
 ## Demo
 
+<img width="3024" height="1730" alt="Facturia home" src="https://github.com/user-attachments/assets/116ed2d0-7da1-429a-ab64-bad9dcd32bc3" />
+
 ---
 
 ## Tech stack
