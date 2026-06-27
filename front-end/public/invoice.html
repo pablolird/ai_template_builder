@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Factura - Ferretería Lird S.R.L.</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 12px;
+        margin: 0;
+        padding: 24px;
+        color: #333;
+        background: #fff;
+      }
+      .invoice {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 8px;
+        background: #fff;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #2c3e50;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+      }
+      .logo-area img {
+        height: 56px;
+        width: 56px;
+        object-fit: contain;
+      }
+      .company-info {
+        text-align: right;
+      }
+      .company-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2c3e50;
+      }
+      .company-details {
+        font-size: 11px;
+        color: #555;
+        margin-top: 4px;
+        line-height: 1.5;
+      }
+      .invoice-title {
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+        margin: 12px 0;
+        color: #2c3e50;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 24px;
+        margin-bottom: 16px;
+      }
+      .info-item {
+        font-size: 11px;
+      }
+      .info-label {
+        font-weight: 700;
+        display: inline-block;
+        width: 92px;
+      }
+      .condicion {
+        border: 1px solid #2c3e50;
+        padding: 3px 10px;
+        display: inline-block;
+        margin-top: 4px;
+        font-weight: 700;
+        background: #ecf0f1;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 11px;
+      }
+      th {
+        background: #2c3e50;
+        color: #fff;
+        padding: 8px 5px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 600;
+      }
+      td {
+        padding: 7px 5px;
+        border-bottom: 1px solid #e3e3e3;
+        text-align: right;
+      }
+      td:first-child,
+      td:nth-child(2) {
+        text-align: left;
+      }
+      .totals-table {
+        width: 55%;
+        margin-left: auto;
+        border: none;
+        margin-top: 6px;
+      }
+      .totals-table td {
+        border: none;
+        padding: 5px 8px;
+        font-size: 12px;
+        text-align: right;
+      }
+      .totals-table .label {
+        text-align: left;
+        color: #555;
+      }
+      .totals-table tr:last-child td {
+        font-weight: 700;
+        border-top: 2px solid #2c3e50;
+        padding-top: 8px;
+        font-size: 14px;
+        color: #2c3e50;
+      }
+      .footer {
+        margin-top: 28px;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+        font-size: 10px;
+        text-align: center;
+        color: #888;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="invoice">
+      <div class="header">
+        <div class="logo-area"><img src="rust.svg" alt="Logo" /></div>
+        <div class="company-info">
+          <div class="company-name">Ferretería Lird S.R.L.</div>
+          <div class="company-details">
+            RUC: 80123456-5<br />Timbrado: 12345678<br />Sample street c/ Sample
+            avenue, Asunción<br />Tel: +595 123456789<br />Email:
+            ferreterialird@hotmail.com
+          </div>
+        </div>
+      </div>
+
+      <div class="invoice-title">Factura</div>
+
+      <div class="info-grid">
+        <div>
+          <div class="info-item">
+            <span class="info-label">Factura N°:</span> 001-001-0000123
+          </div>
+          <div class="info-item">
+            <span class="info-label">Fecha:</span> 26/06/2026
+          </div>
+          <div class="info-item">
+            <span class="info-label">Cliente:</span> Cliente Ejemplo S.A.
+          </div>
+          <div class="info-item">
+            <span class="info-label">RUC Cliente:</span> 12345678-9
+          </div>
+        </div>
+        <div>
+          <div class="info-item">
+            <span class="info-label">Dirección:</span> Calle Falsa 456, Asunción
+          </div>
+          <div class="info-item">
+            <span class="info-label">Condición:</span>
+            <span class="condicion">Contado</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Moneda:</span> Guaraníes (PYG)
+          </div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 34%">Descripción</th>
+            <th style="width: 8%">Cant.</th>
+            <th style="width: 11%">P. Unit.</th>
+            <th style="width: 12%">Exentas</th>
+            <th style="width: 12%">Gravado 5%</th>
+            <th style="width: 12%">Gravado 10%</th>
+            <th style="width: 14%">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Martillo de carpintero 500g</td>
+            <td>10</td>
+            <td>25.000</td>
+            <td></td>
+            <td></td>
+            <td>250.000</td>
+            <td>250.000</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Caja de clavos 2" (100 uds.)</td>
+            <td>5</td>
+            <td>15.000</td>
+            <td></td>
+            <td>75.000</td>
+            <td></td>
+            <td>75.000</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Lija para madera #100 (paq. 10)</td>
+            <td>20</td>
+            <td>5.500</td>
+            <td>110.000</td>
+            <td></td>
+            <td></td>
+            <td>110.000</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Pintura sintética blanca 1L</td>
+            <td>8</td>
+            <td>45.000</td>
+            <td></td>
+            <td></td>
+            <td>360.000</td>
+            <td>360.000</td>
+          </tr>
+          <tr style="font-weight: 700; background: #f7f9fa">
+            <td colspan="4" style="text-align: right">Totales:</td>
+            <td>110.000</td>
+            <td>75.000</td>
+            <td>610.000</td>
+            <td>795.000</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="totals-table">
+        <tr>
+          <td class="label">Total Exentas</td>
+          <td>110.000</td>
+        </tr>
+        <tr>
+          <td class="label">Total Gravado 5%</td>
+          <td>75.000</td>
+        </tr>
+        <tr>
+          <td class="label">IVA 5% (5% de 75.000)</td>
+          <td>3.750</td>
+        </tr>
+        <tr>
+          <td class="label">Total Gravado 10%</td>
+          <td>610.000</td>
+        </tr>
+        <tr>
+          <td class="label">IVA 10% (10% de 610.000)</td>
+          <td>61.000</td>
+        </tr>
+        <tr>
+          <td class="label">Total IVA</td>
+          <td>64.750</td>
+        </tr>
+        <tr>
+          <td class="label">TOTAL GENERAL</td>
+          <td>859.750</td>
+        </tr>
+      </table>
+
+      <div class="footer">
+        <div>
+          Esta factura es válida para todos los efectos legales. Gracias por su
+          compra.
+        </div>
+        <div>
+          Ferretería Lird S.R.L. · RUC: 80123456-5 · Timbrado: 12345678 · Desde:
+          01/01/2026 · Hasta: 31/12/2026
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
